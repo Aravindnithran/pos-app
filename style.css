@@ -1,8 +1,8 @@
 body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 10px; }
-.container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+.container { background: rgb(108, 242, 106); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
 input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; }
-button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+button { width: 100%; padding: 12px; background: #083417; color: white; border: none; border-radius: 5px; cursor: pointer; }
 table { width: 100%; margin-top: 20px; border-collapse: collapse; }
 th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
 .total-section { margin-top: 20px; text-align: right; }
-.print-btn { background: #007bff; margin-top: 10px; }
+.print-btn { background: #083417; margin-top: 10px; }

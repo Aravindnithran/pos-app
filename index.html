@@ -11,26 +11,34 @@
         <h2>POS Billing</h2>
         
         <div class="input-group">
-            <input type="text" id="itemName" placeholder="பொருள் பெயர்">
-            <input type="number" id="itemPrice" placeholder="விலை">
-            <button onclick="addItem()">சேர்</button>
+            <input type="text" id="itemName" placeholder="PRODUCT NAME">
+            <input type="number" id="itemQty" placeholder="QTY">
+            <input type="number" id="itemPrice" placeholder="RATE">
+            <button onclick="addItem()">Ser</button>
         </div>
 
         <table id="billTable">
-            <thead>
-                <tr>
-                    <th>பெயர்</th>
-                    <th>விலை</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
 
         <div class="total-section">
-            <h3>மொத்தம்: ₹ <span id="totalAmount">0</span></h3>
+            <h3>Net Amount: ₹ <span id="totalAmount">0</span></h3>
             <button onclick="generateBill()" class="print-btn">பில் எடு</button>
         </div>
     </div>
+    <button onclick="showReport()" style="background:purple;">விற்பனை அறிக்கை</button>
+<div id="reportSection" style="display:none; margin-top:20px;">
+    <h3>இன்றைய விற்பனை விவரம்</h3>
+    <ul id="reportList"></ul>
+</div>
     <script src="script.js"></script>
 </body>
 </html>

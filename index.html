@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aravind POS Mobile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>POS Billing</h2>
+        
+        <div class="input-group">
+            <input type="text" id="itemName" placeholder="பொருள் பெயர்">
+            <input type="number" id="itemPrice" placeholder="விலை">
+            <button onclick="addItem()">சேர்</button>
+        </div>
+
+        <table id="billTable">
+            <thead>
+                <tr>
+                    <th>பெயர்</th>
+                    <th>விலை</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="total-section">
+            <h3>மொத்தம்: ₹ <span id="totalAmount">0</span></h3>
+            <button onclick="generateBill()" class="print-btn">பில் எடு</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -65,34 +65,89 @@ button {
     align-items: center;
 }
 
-/* Logout பட்டனை வலது ஓரத்தில் வைக்க */
-.header-container {
+/* --- மொபைல் மற்றும் கம்ப்யூட்டருக்கான சரியான ஹெடர் ஸ்டைல் --- */
+.header-wrapper {
     display: flex;
-    justify-content: center;
+    justify-content: space-between; /* லோகோ இடது, பட்டன் வலது */
     align-items: center;
-    position: relative;
-    padding: 20px;
-    background: white;
+    padding: 10px 20px;
+    background: #fff;
+    border-bottom: 2px solid #f1f1f1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.header-wrapper div {
+    text-align: left !important;
 }
 
 .logout-btn {
-    position: absolute;
-    right: 15px;
-    top: 15px;
     background: #e74c3c !important;
     color: white !important;
     border: none;
     padding: 6px 12px !important;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 12px !important;
+    font-size: 11px !important;
+    font-weight: bold;
     width: auto !important; /* பட்டன் நீளமாகாமல் தடுக்கும் */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    white-space: nowrap; /* எழுத்துக்கள் கீழே இறங்காமல் இருக்க */
 }
 
-/* டேபிள் பட்டன்களை பக்கவாட்டில் வைக்க */
+/* டேபிள் பட்டன்களை (Edit/Delete) பக்கவாட்டில் வைக்க */
 .action-div {
     display: flex;
     gap: 15px;
     justify-content: center;
     align-items: center;
+    min-height: 40px;
+}
+
+/* மொபைல் போனுக்கான கூடுதல் செட்டிங்ஸ் */
+@media (max-width: 480px) {
+    .header-wrapper h1 {
+        font-size: 18px !important;
+        margin: 0;
+    }
+    .header-wrapper p {
+        font-size: 10px !important;
+    }
+    .logout-btn {
+        padding: 5px 10px !important;
+        font-size: 10px !important;
+    }
+}
+
+.logo-area p {
+    margin: 0;
+    font-size: 11px;
+    color: #7f8c8d;
+}
+
+/* லாக் அவுட் பட்டன் */
+.logout-btn {
+    background: #e74c3c !important;
+    color: white !important;
+    border: none;
+    padding: 8px 14px !important;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px !important;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* மொபைலில் பட்டன் இன்னும் சிறியதாக தெரிய */
+@media (max-width: 480px) {
+    .header-container {
+        padding: 10px 15px;
+    }
+    .logo-area h1 {
+        font-size: 20px;
+    }
+    .logout-btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
 }

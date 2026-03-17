@@ -227,10 +227,10 @@ window.onload = function() {
             row.insertCell(3).innerText = "₹" + item.total;
             let actionCell = row.insertCell(4);
             actionCell.innerHTML = `
-                  <div class="action-div">
-                   <span onclick="editItem(${index})" style="cursor:pointer; font-size:20px;">✏️</span>
-                   <span onclick="removeItem(${index})" style="cursor:pointer; font-size:20px;">❌</span>
-                </div>`;  
+    <div style="display: flex; gap: 20px; justify-content: flex-start; align-items: center; padding: 10px 0;">
+        <span onclick="editItem(${index})" style="cursor:pointer; font-size:22px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));">✏️</span>
+        <span onclick="removeItem(${index})" style="cursor:pointer; font-size:22px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));">❌</span>
+    </div>`;
             totalAmount += item.total;
         });
     }

@@ -151,3 +151,55 @@ button {
         font-size: 11px !important;
     }
 }
+
+/* 1. ஹெடர் மற்றும் லாக்-அவுட் பட்டன் திருத்தம் */
+.header-wrapper {
+    display: flex !important;
+    justify-content: space-between !important; /* லோகோ இடது, பட்டன் வலது */
+    align-items: center !important;
+    padding: 10px 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+.logout-btn {
+    position: relative !important; /* Absolute இருப்பதை நீக்குகிறது */
+    margin: 0 !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: auto !important;
+    padding: 6px 12px !important;
+}
+
+/* 2. டேபிள் மொபைலில் திரையை விட்டு வெளியே போகாமல் இருக்க */
+.container {
+    width: 100% !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important; /* பக்கவாட்டில் நகர்த்தும் வசதி */
+}
+
+table {
+    width: 100% !important;
+    min-width: 320px !important; /* மொபைலில் உடையாமல் இருக்க */
+}
+
+/* 3. மொபைல் போனுக்கான இறுதி செட்டிங்ஸ் */
+@media (max-width: 480px) {
+    .header-wrapper h1 {
+        font-size: 18px !important;
+    }
+    .nav-menu {
+        padding: 5px !important;
+    }
+    .nav-menu button {
+        font-size: 9px !important; /* பட்டன் பெயர்கள் தெரிய */
+        padding: 8px 2px !important;
+    }
+    th, td {
+        font-size: 11px !important;
+        padding: 6px 4px !important;
+    }
+}

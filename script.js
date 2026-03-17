@@ -305,4 +305,22 @@ window.filterByDate = function() {
     }, { onlyOnce: true });
 };
 
-window.resetFilter = function() { location.reload(); }
+window.resetFilter = function() {
+    document.getElementById("searchDate").value = ""; // தேதியை காலியாக்க
+    document.getElementById("filteredTotal").innerText = "0"; // தேடிய தொகையை 0 ஆக்க
+    
+    // மீண்டும் எல்லா விற்பனை விவரங்களையும் காட்ட
+    onValue(ref(db, 'dailySales'), (snapshot) => {
+        const salesData = snapshot.val();
+        const reportTableBody = document.querySelector("#salesReportTable tbody");
+        if (reportTableBody && salesData) {
+            reportTableBody.innerHTML = "";
+            Object.keys(salesData).reverse().forEach(key => {
+                let row = reportTableBody.insertRow();
+                row.insertCell(0).innerText = `${salesData[key].date} ${salesData[key].time}`;
+                row.insertCell(1).innerText = "₹" + salesData[key].amount;
+                row.insertCell(2).innerHTML = `<button onclick="alert('பொருட்கள்: ' + '${salesData[key].items.map(i => i.name).join(", ")}')" style="padding:5px;">View</button>`;
+            });
+        }
+    }, { onlyOnce: true });
+};

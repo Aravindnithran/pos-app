@@ -16,6 +16,7 @@ const db = getDatabase(app);
 
 let items = JSON.parse(localStorage.getItem('myBillItems')) || [];
 let cloudProducts = {}; 
+let editIndex = -1; 
 
 // Tab மாற்றும் வசதி
 window.openTab = function(tabName) {
@@ -69,10 +70,25 @@ window.addItem = function() {
 
     if (name && qty && price) {
         let item = { name, qty, price, total: qty * price };
-        items.push(item);
+        if (editIndex === -1) {
+            items.push(item);
+        } else {
+            items[editIndex] = item;
+            editIndex = -1;
+            document.querySelector('button[onclick="addItem()"]').innerText = 'ADD';
+        }
         localStorage.setItem('myBillItems', JSON.stringify(items));
         location.reload(); 
     }
+}
+
+window.editItem = function(index) {
+    let item = items[index];
+    document.getElementById("itemName").value = item.name;
+    document.getElementById("itemQty").value = item.qty;
+    document.getElementById("itemPrice").value = item.price;
+    editIndex = index;
+    document.querySelector('button[onclick="addItem()"]').innerText = 'UPDATE';
 }
 
 window.generateBill = function() {

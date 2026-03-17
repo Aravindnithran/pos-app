@@ -491,6 +491,14 @@ window.onload = function() {
         
         // Remove பட்டன் சேர்த்தல்
         let actionCell = row.insertCell(4);
+        let editBtn = document.createElement("button");
+        editBtn.innerHTML = "✏️";
+        editBtn.style.cssText = "background:none; border:none; color:blue; cursor:pointer; font-size:18px; margin-right:5px;";
+        editBtn.onclick = function() {
+            editItem(index);
+        };
+        actionCell.appendChild(editBtn);
+        
         let removeBtn = document.createElement("button");
         removeBtn.innerHTML = "❌";
         removeBtn.style.cssText = "background:none; border:none; color:red; cursor:pointer; font-size:18px;";

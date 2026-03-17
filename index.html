@@ -6,32 +6,48 @@
     <title>NIHA POS</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Logout பட்டனை லோகோவிற்கு தொந்தரவு இல்லாமல் வலது ஓரத்தில் வைக்க */
+        /* மொபைல் மற்றும் டெஸ்க்டாப் இரண்டிற்கும் கச்சிதமான ஹெடர் */
         .header-wrapper {
             display: flex;
-            justify-content: center;
+            justify-content: space-between; /* லோகோ இடது, பட்டன் வலது */
             align-items: center;
-            position: relative;
-            padding: 20px 10px;
+            padding: 12px 15px;
             background: #fff;
-            border-bottom: 1px solid #eee;
+            border-bottom: 2px solid #f1f1f1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .logo-area {
+            text-align: left;
+        }
+
+        .logo-area h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            letter-spacing: 1px;
+            font-size: 22px;
+        }
+
+        .logo-area p {
+            margin: 0;
+            font-size: 11px;
+            color: #7f8c8d;
         }
 
         .logout-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
             background: #e74c3c !important;
             color: white !important;
             border: none;
             padding: 8px 15px !important;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 10px !important;
+            font-size: 11px !important;
             font-weight: bold;
             width: auto !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap;
         }
 
         /* டேபிளில் பட்டன்கள் அருகருகே வர */
@@ -48,8 +64,15 @@
             transition: transform 0.2s;
         }
 
-        .action-icon:hover {
-            transform: scale(1.2);
+        /* மொபைல் போனுக்கான கூடுதல் செட்டிங்ஸ் */
+        @media (max-width: 480px) {
+            .logo-area h1 {
+                font-size: 18px;
+            }
+            .logout-btn {
+                padding: 6px 10px !important;
+                font-size: 10px !important;
+            }
         }
     </style>
 </head>
@@ -70,9 +93,9 @@
     <div id="main-app" style="display: none;">
         
         <div class="header-wrapper">
-            <div style="text-align: center;">
-                <h1 style="color: #2c3e50; margin: 0; font-family: 'Arial', sans-serif; letter-spacing: 2px;">NIHA POS</h1>
-                <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Smart Billing Solution</p>
+            <div class="logo-area">
+                <h1>NIHA POS</h1>
+                <p>Smart Billing Solution</p>
             </div>
             <button onclick="logout()" class="logout-btn">Logout</button>
         </div>

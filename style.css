@@ -64,3 +64,35 @@ button {
     flex-direction: column;
     align-items: center;
 }
+
+/* Logout பட்டனை வலது ஓரத்தில் வைக்க */
+.header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+    background: white;
+}
+
+.logout-btn {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    background: #e74c3c !important;
+    color: white !important;
+    border: none;
+    padding: 6px 12px !important;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px !important;
+    width: auto !important; /* பட்டன் நீளமாகாமல் தடுக்கும் */
+}
+
+/* டேபிள் பட்டன்களை பக்கவாட்டில் வைக்க */
+.action-div {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}

@@ -3,85 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aravind POS Cloud</title>
+    <title>NIHA POS</title>
     <link rel="stylesheet" href="style.css">
-    
+    <style>
+        /* Logout பட்டனை லோகோவிற்கு தொந்தரவு இல்லாமல் வலது ஓரத்தில் வைக்க */
+        .header-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px 10px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+
+        .logout-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e74c3c !important;
+            color: white !important;
+            border: none;
+            padding: 8px 15px !important;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px !important;
+            font-weight: bold;
+            width: auto !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* டேபிளில் பட்டன்கள் அருகருகே வர */
+        .action-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+
+        .action-icon:hover {
+            transform: scale(1.2);
+        }
+    </style>
 </head>
 <body>
 
-    <div class="nav-menu">
-        <button onclick="openTab('billing-tab')">BILLING</button>
-        <button onclick="openTab('inventory-tab')">ADD PRODUCTS (CLOUD)</button>
-    </div>
-
-    <div class="sales-report-container" style="background: white; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #ccc; text-align: center;">
-    <h3 style="margin: 0; font-size: 18px;">இன்றைய மொத்த விற்பனை: <span style="color: green;">₹ <span id="todayTotal">0</span></span></h3>
-</div>
-
-      <div id="billing-tab" class="tab-content">
-        <div class="container">
-            <h2>POS Billing</h2>
-            <div class="input-group">
-                <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" oninput="fillPrice()">
-                <datalist id="productSuggestions"></datalist>
-                
-                <input type="number" id="itemQty" placeholder="QTY">
-                <input type="number" id="itemPrice" placeholder="RATE">
-                <button onclick="addItem()">ADD</button>
-            </div>
-
-
-            <table id="billTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Qty</th>
-                        <th>Rate</th>
-                        <th>Total</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-
+    <div id="login-section" style="text-align: center; margin-top: 100px; padding: 20px;">
+        <div style="max-width: 350px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <h1 style="color: #2c3e50; margin-bottom: 5px;">NIHA POS</h1>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Smart Billing Solution</p>
             
+            <p style="font-size: 14px; color: #333; font-weight: bold; text-align: left; margin-bottom: 5px;">Admin Login</p>
+            <input type="password" id="adminPass" placeholder="PASSWORD" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+            
+            <button onclick="checkLogin()" style="width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">LOGIN</button>
+        </div>
+    </div>
 
-            <div class="total-section">
-                <h3>Net Amount: ₹ <span id="totalAmount">0</span></h3>
-                <button onclick="generateBill()" class="print-btn">பில் எடு</button>
-                <button onclick="clearBill()" style="background:red;">CLEAR</button>
+    <div id="main-app" style="display: none;">
+        
+        <div class="header-wrapper">
+            <div style="text-align: center;">
+                <h1 style="color: #2c3e50; margin: 0; font-family: 'Arial', sans-serif; letter-spacing: 2px;">NIHA POS</h1>
+                <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Smart Billing Solution</p>
+            </div>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+
+        <div class="nav-menu">
+            <button onclick="openTab('billing-tab')">BILLING</button>
+            <button onclick="openTab('inventory-tab')">ADD PRODUCTS (CLOUD)</button>
+            <button onclick="openTab('sales-report-tab')">SALES REPORT</button>
+        </div>
+
+        <div id="billing-tab" class="tab-content">
+            <div class="container">
+                <h2>POS Billing</h2>
+
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="customerName" placeholder="Customer Name (விரும்பினால்)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" oninput="fillPrice()">
+                    <datalist id="productSuggestions"></datalist>
+                    
+                    <input type="number" id="itemQty" placeholder="QTY">
+                    <input type="number" id="itemPrice" placeholder="RATE">
+                    <p id="stockDisplay" style="margin: 5px 0; font-size: 14px; color: #666; font-weight: bold;">Stock: -</p>
+                    <button onclick="addItem()">ADD</button>
+                </div>
+
+                <div class="sales-report-container" style="background: white; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #ccc; text-align: center;">
+                    <h3 style="margin: 0; font-size: 18px;">இன்றைய மொத்த விற்பனை: <span style="color: green;">₹ <span id="todayTotal">0</span></span></h3>
+                </div>
+
+                <table id="billTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <div class="total-section">
+                    <h3>Net Amount: ₹ <span id="totalAmount">0</span></h3>
+                    <button onclick="generateBill()" class="print-btn">பில் எடு</button>
+                    <button onclick="clearBill()" style="background:red;">CLEAR</button>
+                </div>
             </div>
         </div>
-        
-        <button onclick="showReport()" class="report-btn">விற்பனை அறிக்கை</button>
-        <div id="reportSection" style="display:none; margin-top:20px;">
-            <h3>இன்றைய விற்பனை விவரம்</h3>
-            <ul id="reportList"></ul>
+
+        <div id="inventory-tab" class="tab-content" style="display:none;">
+            <div class="container cloud-section">
+                <h3>Add New Product to Cloud</h3>
+                <input type="text" id="pName" placeholder="Product Name">
+                <input type="number" id="pPrice" placeholder="Price">
+                <input type="number" id="pStock" placeholder="Stock Quantity (எண்ணிக்கை)">
+                <button onclick="saveToCloud()">ADD TO CLOUD</button>
+                
+                <hr>
+                <h3>Available Products in Cloud</h3>
+                <table id="cloudProductTable">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Edit Stock</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <div id="inventory-tab" class="tab-content" style="display:none;">
-    <div class="container cloud-section">
-        <h3>Add New Product to Cloud</h3>
-        <input type="text" id="pName" placeholder="Product Name">
-        <input type="number" id="pPrice" placeholder="Price">
-        <button onclick="saveToCloud()">ADD TO CLOUD</button>
-        
-        <hr>
-        <h3>Available Products in Cloud</h3>
-        <table id="cloudProductTable">
-            <thead>
-                <tr>
-                    <th>Product Name</th>
-                    <th>Price</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</div>
+        <div id="sales-report-tab" class="tab-content" style="display:none;">
+            <div class="container">
+                <h3>விற்பனை அறிக்கை (Sales Report)</h3>
 
+                <div class="filter-section" style="margin: 15px 0; display: flex; gap: 10px; justify-content: center;">
+                    <input type="date" id="searchDate" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button onclick="filterByDate()" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">தேடு</button>
+                    <button onclick="resetFilter()" style="background: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">அனைத்தும்</button>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <strong>அந்த நாளின் மொத்த வசூல்: ₹ <span id="filteredTotal">0</span></strong>
+                </div>
+
+                <table id="salesReportTable">
+                    <thead>
+                        <tr>
+                            <th>தேதி/நேரம்</th>
+                            <th>மொத்த தொகை</th>
+                            <th>விவரம்</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div> 
+    
     <script type="module" src="script.js"></script>
 </body>
 </html>

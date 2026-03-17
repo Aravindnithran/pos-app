@@ -3,57 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aravind POS Mobile</title>
+    <title>Aravind POS Cloud</title>
     <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
-    <div class="container">
-        <h2>POS Billing</h2>
-        
-        <div class="input-group">
-            <input type="text" id="itemName" placeholder="PRODUCT NAME">
-            <input type="number" id="itemQty" placeholder="QTY">
-            <input type="number" id="itemPrice" placeholder="RATE">
-            <button onclick="addItem()">ADD</button>
+
+    <div class="nav-menu">
+        <button onclick="openTab('billing-tab')">BILLING</button>
+        <button onclick="openTab('inventory-tab')">ADD PRODUCTS (CLOUD)</button>
+    </div>
+
+    <div class="sales-report-container" style="background: white; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #ccc; text-align: center;">
+    <h3 style="margin: 0; font-size: 18px;">இன்றைய மொத்த விற்பனை: <span style="color: green;">₹ <span id="todayTotal">0</span></span></h3>
+</div>
+
+      <div id="billing-tab" class="tab-content">
+        <div class="container">
+            <h2>POS Billing</h2>
+            <div class="input-group">
+                <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" oninput="fillPrice()">
+                <datalist id="productSuggestions"></datalist>
+                
+                <input type="number" id="itemQty" placeholder="QTY">
+                <input type="number" id="itemPrice" placeholder="RATE">
+                <button onclick="addItem()">ADD</button>
+            </div>
+
+
+            <table id="billTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            
+
+            <div class="total-section">
+                <h3>Net Amount: ₹ <span id="totalAmount">0</span></h3>
+                <button onclick="generateBill()" class="print-btn">பில் எடு</button>
+                <button onclick="clearBill()" style="background:red;">CLEAR</button>
+            </div>
         </div>
-
-        <table id="billTable">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
-
-        <div class="total-section">
-            <h3>Net Amount: ₹ <span id="totalAmount">0</span></h3>
-            <button onclick="generateBill()" class="print-btn">பில் எடு</button>
+        
+        <button onclick="showReport()" class="report-btn">விற்பனை அறிக்கை</button>
+        <div id="reportSection" style="display:none; margin-top:20px;">
+            <h3>இன்றைய விற்பனை விவரம்</h3>
+            <ul id="reportList"></ul>
         </div>
     </div>
-    <button onclick="showReport()" style="background:rgb(25, 60, 22);">விற்பனை அறிக்கை</button>
-<div id="reportSection" style="display:none; margin-top:20px;">
-    <h3>இன்றைய விற்பனை விவரம்</h3>
-    <ul id="reportList"></ul>
+
+    <div id="inventory-tab" class="tab-content" style="display:none;">
+    <div class="container cloud-section">
+        <h3>Add New Product to Cloud</h3>
+        <input type="text" id="pName" placeholder="Product Name">
+        <input type="number" id="pPrice" placeholder="Price">
+        <button onclick="saveToCloud()">ADD TO CLOUD</button>
+        
+        <hr>
+        <h3>Available Products in Cloud</h3>
+        <table id="cloudProductTable">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
-    <script src="script.js"></script>
+
+    <script type="module" src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -6,3 +6,61 @@ table { width: 100%; margin-top: 20px; border-collapse: collapse; }
 th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
 .total-section { margin-top: 20px; text-align: right; }
 .print-btn { background: #083417; margin-top: 10px; }
+
+/* Navigation Styling */
+.nav-menu {
+    display: flex;
+    justify-content: space-around;
+    background: #193c16;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.nav-menu button {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    width: 45%;
+    padding: 10px;
+}
+
+.nav-menu button:hover {
+    background: white;
+    color: #193c16;
+}
+
+/* Tab logic */
+.tab-content {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    width: 95%;
+    padding: 12px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

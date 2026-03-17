@@ -21,7 +21,7 @@ let editIndex = -1;
 // --- 1. LOGIN LOGIC ---
 window.checkLogin = function() {
     const pass = document.getElementById("adminPass").value;
-    const correctPass = "123"; // உங்கள் பாஸ்வேர்ட் இங்கே உள்ளது
+    const correctPass = "123"; 
 
     if (pass === correctPass) {
         document.getElementById("login-section").style.display = "none";
@@ -125,6 +125,30 @@ window.fillPrice = function() {
     }
 }
 
+// --- 5. BILLING LOGIC (NO RELOAD) ---
+window.updateBillTable = function() {
+    let table = document.querySelector("#billTable tbody");
+    let totalAmount = 0;
+    if (table) {
+        table.innerHTML = ""; 
+        items.forEach((item, index) => {
+            let row = table.insertRow();
+            row.insertCell(0).innerText = item.name;
+            row.insertCell(1).innerText = item.qty;
+            row.insertCell(2).innerText = "₹" + item.price;
+            row.insertCell(3).innerText = "₹" + item.total;
+            let actionCell = row.insertCell(4);
+            actionCell.innerHTML = `
+                <div style="display: flex; gap: 20px; justify-content: flex-start; align-items: center; padding: 10px 0;">
+                    <span onclick="editItem(${index})" style="cursor:pointer; font-size:22px;">✏️</span>
+                    <span onclick="removeItem(${index})" style="cursor:pointer; font-size:22px;">❌</span>
+                </div>`;
+            totalAmount += item.total;
+        });
+    }
+    document.getElementById("totalAmount").innerText = totalAmount;
+}
+
 window.addItem = function() {
     let name = document.getElementById("itemName").value;
     let qty = parseInt(document.getElementById("itemQty").value);
@@ -150,19 +174,26 @@ window.addItem = function() {
             document.querySelector('button[onclick="addItem()"]').innerText = 'ADD';
         }
         localStorage.setItem('myBillItems', JSON.stringify(items));
-        location.reload(); 
+        
+        // இன்புட்களை மட்டும் சுத்தம் செய்யவும்
+        document.getElementById("itemName").value = "";
+        document.getElementById("itemQty").value = "";
+        document.getElementById("itemPrice").value = "";
+        
+        window.updateBillTable(); 
     }
 }
 
 window.generateBill = function() {
     let finalTotal = parseFloat(document.getElementById("totalAmount").innerText);
     let cName = document.getElementById("customerName").value.trim();
+    let finalCustomerName = cName !== "" ? cName : "Cash Customer";
     
     if (finalTotal === 0 || items.length === 0) return alert("பில் காலியாக உள்ளது!");
 
     try {
         push(ref(db, 'dailySales'), {
-            customerName: cName || "Cash Customer",
+            customerName: finalCustomerName,
             amount: finalTotal,
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString(),
@@ -184,8 +215,9 @@ window.generateBill = function() {
         <html><head><style>
             body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 10px; }
             .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
             th { border-bottom: 1px dashed #000; text-align: left; }
+            td { padding: 5px 0; }
             .total { border-top: 2px dashed #000; margin-top: 10px; padding-top: 10px; text-align: right; font-weight: bold; }
         </style></head><body>
         <div class="header">
@@ -193,11 +225,12 @@ window.generateBill = function() {
             <p style="font-size: 18px; font-weight: bold; margin: 0;">AYYAPPAN STORE</p>
             <p>No:135, P.H. ROAD, MADURAVOYAL</p>
             <p>Mobile: 9943514861</p>
-            <p style="font-size: 11px;">Date: ${new Date().toLocaleString()}</p>
-            ${cName ? `<p style="font-size: 13px; text-align:left;"><b>Customer: ${cName}</b></p>` : ''}
+            <hr>
+            <p style="text-align:left; margin: 5px 0;">Date: ${new Date().toLocaleString()}</p>
+            <p style="text-align:left; margin: 5px 0;"><b>Customer: ${finalCustomerName}</b></p>
         </div>
-        <table><thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead><tbody>
-        ${items.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.total}</td></tr>`).join('')}
+        <table><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>
+        ${items.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.total}</td></tr>`).join('')}
         </tbody></table>
         <div class="total">Grand Total: ₹${finalTotal}</div>
         <div style="text-align:center; margin-top:20px;">Thank you! Visit Again!</div>
@@ -207,37 +240,15 @@ window.generateBill = function() {
     setTimeout(() => { printWindow.print(); printWindow.close(); window.clearBill(); }, 500);
 }
 
-// --- 5. INITIAL LOAD & UTILS ---
+// --- 6. INITIAL LOAD & UTILS ---
 window.onload = function() {
-    // லாகின் சரிபார்ப்பு
     if (sessionStorage.getItem("isLoggedIn") === "true") {
         document.getElementById("login-section").style.display = "none";
         document.getElementById("main-app").style.display = "block";
     }
-
-    let table = document.querySelector("#billTable tbody");
-    let totalAmount = 0;
-    if (table) {
-        table.innerHTML = ""; 
-        items.forEach((item, index) => {
-            let row = table.insertRow();
-            row.insertCell(0).innerText = item.name;
-            row.insertCell(1).innerText = item.qty;
-            row.insertCell(2).innerText = "₹" + item.price;
-            row.insertCell(3).innerText = "₹" + item.total;
-            let actionCell = row.insertCell(4);
-            actionCell.innerHTML = `
-    <div style="display: flex; gap: 20px; justify-content: flex-start; align-items: center; padding: 10px 0;">
-        <span onclick="editItem(${index})" style="cursor:pointer; font-size:22px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));">✏️</span>
-        <span onclick="removeItem(${index})" style="cursor:pointer; font-size:22px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.2));">❌</span>
-    </div>`;
-            totalAmount += item.total;
-        });
-    }
-    document.getElementById("totalAmount").innerText = totalAmount;
+    window.updateBillTable();
 };
 
-// --- Daily Sales Listener ---
 onValue(ref(db, 'dailySales'), (snapshot) => {
     const salesData = snapshot.val();
     let todaySum = 0;
@@ -268,8 +279,18 @@ window.saveToCloud = function() {
     }
 }
 
-window.clearBill = function() { localStorage.removeItem('myBillItems'); location.reload(); }
-window.removeItem = function(index) { items.splice(index, 1); localStorage.setItem('myBillItems', JSON.stringify(items)); location.reload(); }
+window.clearBill = function() { 
+    items = [];
+    localStorage.removeItem('myBillItems'); 
+    window.updateBillTable();
+}
+
+window.removeItem = function(index) { 
+    items.splice(index, 1); 
+    localStorage.setItem('myBillItems', JSON.stringify(items)); 
+    window.updateBillTable();
+}
+
 window.editItem = function(index) {
     let item = items[index];
     document.getElementById("itemName").value = item.name;
@@ -278,9 +299,10 @@ window.editItem = function(index) {
     editIndex = index;
     document.querySelector('button[onclick="addItem()"]').innerText = 'UPDATE';
 }
+
 window.deleteProduct = function(key) { if(confirm("Delete product?")) remove(ref(db, 'products/' + key)); }
 
-// Filter logic
+// Sales Filter logic
 window.filterByDate = function() {
     const searchDate = document.getElementById("searchDate").value;
     if (!searchDate) return alert("தேதியைத் தேர்ந்தெடுக்கவும்!");
@@ -306,21 +328,7 @@ window.filterByDate = function() {
 };
 
 window.resetFilter = function() {
-    document.getElementById("searchDate").value = ""; // தேதியை காலியாக்க
-    document.getElementById("filteredTotal").innerText = "0"; // தேடிய தொகையை 0 ஆக்க
-    
-    // மீண்டும் எல்லா விற்பனை விவரங்களையும் காட்ட
-    onValue(ref(db, 'dailySales'), (snapshot) => {
-        const salesData = snapshot.val();
-        const reportTableBody = document.querySelector("#salesReportTable tbody");
-        if (reportTableBody && salesData) {
-            reportTableBody.innerHTML = "";
-            Object.keys(salesData).reverse().forEach(key => {
-                let row = reportTableBody.insertRow();
-                row.insertCell(0).innerText = `${salesData[key].date} ${salesData[key].time}`;
-                row.insertCell(1).innerText = "₹" + salesData[key].amount;
-                row.insertCell(2).innerHTML = `<button onclick="alert('பொருட்கள்: ' + '${salesData[key].items.map(i => i.name).join(", ")}')" style="padding:5px;">View</button>`;
-            });
-        }
-    }, { onlyOnce: true });
+    document.getElementById("searchDate").value = "";
+    document.getElementById("filteredTotal").innerText = "0";
+    location.reload(); // இங்கு ரீலோடு செய்யலாம் ஏனெனில் இது தனி பக்கம்
 };

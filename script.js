@@ -207,7 +207,7 @@ window.generateBill = function() {
     
     if (finalTotal === 0 || items.length === 0) return alert("பில் காலியாக உள்ளது!");
 
-    // --- FIREBASE சேமிப்பு ---
+    // --- 1. FIREBASE சேமிப்பு ---
     try {
         push(ref(db, 'dailySales'), {
             customerName: finalCustomerName,
@@ -228,53 +228,8 @@ window.generateBill = function() {
         });
     } catch (e) { console.error(e); }
 
-    // --- 3-Inch Thermal Design ---
-    let printWindow = window.open('', '_blank', 'width=400,height=600');
-    
-    let tableContent = items.map(i => `
-        <tr>
-            <td>${i.name}</td>
-            <td>${parseFloat(i.qty).toFixed(3)}</td>
-            <td>${i.price}</td>
-            <td style="text-align:right;">${i.total.toFixed(2)}</td>
-        </tr>`).join('');
-
-    printWindow.document.write(`
-        <html><head><style>
-            @page { size: 80mm auto; margin: 0; }
-            body { font-family: 'Arial', sans-serif; width: 72mm; margin: 0 auto; padding: 5px; font-size: 13px; line-height: 1.2; }
-            .header { text-align: center; }
-            .store-name { font-size: 18px; font-weight: bold; margin: 0; }
-            .dashed-line { border-top: 1px dashed #000; margin: 5px 0; }
-            table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th { text-align: left; border-bottom: 1px dashed #000; padding: 3px 0; }
-            td { padding: 4px 0; }
-            .total-row { font-weight: bold; font-size: 15px; margin-top: 10px; text-align: right; }
-        </style></head><body>
-        <div class="header">
-            <p class="store-name">AYYAPPAN STORE</p>
-            <p>No:135, P.H. ROAD, MADURAVOYAL</p>
-            <p>Cell: 9943514861</p>
-            <div class="dashed-line"></div>
-            <p style="text-align:left;">Date: ${new Date().toLocaleString()}</p>
-            <p style="text-align:left;"><b>Cust: ${finalCustomerName}</b></p>
-            <div class="dashed-line"></div>
-        </div>
-        <table>
-            <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
-            <tbody>${tableContent}</tbody>
-        </table>
-        <div class="dashed-line"></div>
-        <div class="total-row">Grand Total: ₹${finalTotal.toFixed(2)}</div>
-        <div class="dashed-line"></div>
-        <p style="text-align:center; font-size:11px;">Thank you! Visit Again!</p>
-        </body></html>
-    `);
-    printWindow.document.close();
-
-    // --- வாட்ஸ்அப் மெசேஜ் தயார் செய்தல் ---
+    // --- 2. வாட்ஸ்அப் மெசேஜ் தயார் செய்தல் ---
     let itemsText = items.map(i => `${i.name} - ${parseFloat(i.qty).toFixed(3)} x ${i.price} = ₹${i.total.toFixed(2)}`).join('%0A');
-    
     let billSummary = `*AYYAPPAN STORE - BILL*%0A` +
                       `Date: ${new Date().toLocaleDateString()}%0A` +
                       `Customer: ${finalCustomerName}%0A` +
@@ -284,27 +239,71 @@ window.generateBill = function() {
                       `*Grand Total: ₹${finalTotal.toFixed(2)}*%0A` +
                       `Thank you! Visit Again!`;
 
-    // மொபைலில் பிரிண்ட் மற்றும் வாட்ஸ்அப் சரியாக வர:
-    setTimeout(() => { 
-        printWindow.print(); 
-        
-        // பிரிண்ட் விண்டோ கேன்சல் அல்லது முடிந்த பிறகு வாட்ஸ்அப் கேட்கும்
-        setTimeout(() => {
-            if(confirm("பில்லை WhatsApp-ல் அனுப்பலாமா?")) {
-                let waLink = cMobile !== "" 
-                    ? "https://wa.me/91" + cMobile + "?text=" + billSummary
-                    : "https://wa.me/?text=" + billSummary;
-                
-                window.open(waLink, '_blank');
-            }
-            
-            printWindow.close(); 
-            document.getElementById("customerName").value = "";
-            document.getElementById("customerMobile").value = "";
-            window.clearBill();
-        }, 1500); 
+    // --- 3. தேர்வு செய்யும் வசதி (Print or WhatsApp) ---
+    // ஒரு அழகான அலர்ட் பாக்ஸ் மூலம் கேட்கிறோம்
+    let choice = confirm("பில்லை என்ன செய்ய வேண்டும்?\n\nOK - WhatsApp அனுப்ப\nCancel - Printer-ல் பிரிண்ட் எடுக்க");
 
-    }, 1000);
+    if (choice) {
+        // --- WHATSAPP அனுப்பும் முறை ---
+        let waLink = cMobile !== "" 
+            ? "https://wa.me/91" + cMobile + "?text=" + billSummary
+            : "https://wa.me/?text=" + billSummary;
+        window.open(waLink, '_blank');
+        finishBill();
+    } else {
+        // --- PRINTER-ல் பிரிண்ட் எடுக்கும் முறை ---
+        let printWindow = window.open('', '_blank', 'width=400,height=600');
+        let tableContent = items.map(i => `
+            <tr>
+                <td>${i.name}</td>
+                <td>${parseFloat(i.qty).toFixed(3)}</td>
+                <td>${i.price}</td>
+                <td style="text-align:right;">${i.total.toFixed(2)}</td>
+            </tr>`).join('');
+
+        printWindow.document.write(`
+            <html><head><style>
+                @page { size: 80mm auto; margin: 0; }
+                body { font-family: 'Arial', sans-serif; width: 72mm; margin: 0 auto; padding: 5px; font-size: 13px; line-height: 1.2; }
+                .header { text-align: center; }
+                .store-name { font-size: 16px; font-weight: bold; margin: 0; }
+                .dashed-line { border-top: 1px dashed #000; margin: 5px 0; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                th { text-align: left; border-bottom: 1px dashed #000; padding: 3px 0; }
+                td { padding: 4px 0; }
+                .total-row { font-weight: bold; font-size: 14px; margin-top: 10px; text-align: right; }
+            </style></head><body>
+            <div class="header">
+                <p class="store-name">AYYAPPAN STORE</p>
+                <p style="margin:2px 0;">No:135, P.H. ROAD, MADURAVOYAL</p>
+                <div class="dashed-line"></div>
+                <p style="text-align:left; margin:2px 0;">Date: ${new Date().toLocaleString()}</p>
+                <div class="dashed-line"></div>
+            </div>
+            <table>
+                <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
+                <tbody>${tableContent}</tbody>
+            </table>
+            <div class="dashed-line"></div>
+            <div class="total-row">Total: ₹${finalTotal.toFixed(2)}</div>
+            </body></html>
+        `);
+        printWindow.document.close();
+        
+        // மொபைல் பிரீவியூ எர்ரர் வராமல் இருக்க சிறிய இடைவெளி
+        setTimeout(() => { 
+            printWindow.print(); 
+            printWindow.close();
+            finishBill();
+        }, 1000);
+    }
+
+    // பில்லை கிளியர் செய்யும் பொதுவான ஃபங்க்ஷன்
+    function finishBill() {
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerMobile").value = "";
+        window.clearBill();
+    }
 }
 
 // --- 6. INITIAL LOAD & UTILS ---

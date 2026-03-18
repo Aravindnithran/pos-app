@@ -1,5 +1,5 @@
-body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 10px; }
-.container { background: rgb(108, 242, 106); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+body { font-family: Arial, sans-serif; background: #71e57d; padding: 10px; }
+.container { background: rgb(170, 239, 168); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
 input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; }
 button { width: 100%; padding: 12px; background: #083417; color: white; border: none; border-radius: 5px; cursor: pointer; }
 table { width: 100%; margin-top: 20px; border-collapse: collapse; }
@@ -202,4 +202,24 @@ table {
         font-size: 11px !important;
         padding: 6px 4px !important;
     }
+}
+
+/* பட்டன் மற்றும் பேக்கிரவுண்ட் நிறத்தை மாற்ற */
+button, .header, .tab-btn.active {
+    background-color: #1b4229 !important;
+    border-color: #eaefec !important;
+    color: rgb(248, 244, 244); /* பச்சை நிறத்தில் வெள்ளை எழுத்துக்கள் நன்றாக இருக்கும் */
+}
+
+/* ஹோவர் (Mouse வைக்கும் போது) செய்யும் போது நிறம் மாற */
+button:hover {
+    background-color: #62dd8f !important; /* இன்னும் கொஞ்சம் அடர் பச்சை */
+}
+
+#login-section button {
+    background: #1b4229;
+}
+
+.card-header {
+    background: #1b4229;
 }

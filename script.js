@@ -149,48 +149,48 @@ window.updateBillTable = function() {
     document.getElementById("totalAmount").innerText = totalAmount.toFixed(2);
 }
 
+// --- 5. BILLING LOGIC (Fixed for Add Item) ---
+
 window.addItem = function() {
-    let name = document.getElementById("itemName").value;
-    let qty = parseFloat(document.getElementById("itemQty").value); 
-    let price = parseFloat(document.getElementById("itemPrice").value);
+    const name = document.getElementById("itemName").value;
+    const qty = parseFloat(document.getElementById("itemQty").value) || 0;
+    const rate = parseFloat(document.getElementById("itemPrice").value) || 0;
 
-    if (name && !isNaN(qty) && qty > 0 && !isNaN(price)) {
-        let currentStock = 0;
-        Object.keys(cloudProducts).forEach(key => {
-            if (cloudProducts[key].productName === name) {
-                currentStock = parseFloat(cloudProducts[key].productStock) || 0;
-            }
-        });
-
-        if (qty > currentStock) {
-            alert("போதிய ஸ்டாக் இல்லை! (Available: " + currentStock + ")");
-            return;
-        }
-
-        let total = parseFloat((qty * price).toFixed(2));
-        let item = { name, qty, price, total: total };
-
-        if (editIndex === -1) {
-            items.push(item);
-        } else {
-            items[editIndex] = item;
-            editIndex = -1;
-            document.querySelector('button[onclick="addItem()"]').innerText = 'ADD';
-        }
-
-        localStorage.setItem('myBillItems', JSON.stringify(items));
-        
-        document.getElementById("itemName").value = "";
-        document.getElementById("itemQty").value = "";
-        document.getElementById("itemPrice").value = "";
-        document.getElementById("liveTotalDisplay").innerText = "Amount: ₹ 0.00"; 
-        
-        window.updateBillTable(); 
-    } else {
-        alert("தயவுசெய்து பெயர், அளவு மற்றும் சரியான விலையை உள்ளிடவும்!");
+    if (!name || qty <= 0 || rate <= 0) {
+        alert("தயவுசெய்து சரியான விவரங்களை உள்ளிடவும்!");
+        return;
     }
-}
 
+    const total = qty * rate;
+    
+    // உங்கள் பழைய ஸ்கிரிப்ட்டில் 'items' என்ற பெயரே பயன்படுத்தப்பட்டுள்ளது
+    // எனவே 'items' லிஸ்டில் டேட்டாவைச் சேர்க்கிறோம்
+    const newItem = { name, qty, price: rate, total }; // rate-ஐ price என மாற்றியுள்ளேன் (பிரிண்ட் எடுக்க வசதியாக)
+
+    if (editIndex > -1) {
+        items[editIndex] = newItem;
+        editIndex = -1;
+        document.querySelector('button[onclick="addItem()"]').innerText = 'ADD';
+    } else {
+        items.push(newItem);
+    }
+
+    // டேபிளை உடனே புதுப்பிக்க
+    window.updateBillTable();
+
+    // இன்புட் பாக்ஸ்களை கிளியர் செய்ய
+    document.getElementById("itemName").value = "";
+    document.getElementById("itemQty").value = "";
+    document.getElementById("itemPrice").value = "";
+    
+    // லைவ் டோட்டலை 0 ஆக்க
+    if(document.getElementById('liveTotalDisplay')) {
+        document.getElementById('liveTotalDisplay').innerText = "Amount: ₹ 0.00";
+    }
+    
+    // LocalStorage-ல் சேமிக்க (பிரிண்ட் எடுக்கும் வரை டேட்டா அழியாமல் இருக்க)
+    localStorage.setItem('myBillItems', JSON.stringify(items));
+};
 window.updateLiveTotal = function() {
     let qty = parseFloat(document.getElementById('itemQty').value) || 0;
     let rate = parseFloat(document.getElementById('itemPrice').value) || 0;
@@ -258,7 +258,7 @@ window.generateBill = function() {
                     <tr style="border-bottom: 1px solid #eee;">
                         <td style="padding: 10px 0; font-weight: bold;">${i.name}</td>
                         <td style="text-align: center;">${parseFloat(i.qty).toFixed(3)}</td>
-                        <td style="text-align: center;">${parseFloat(i.price).toFixed(2)}</td>
+                        <td style="text-align: center;">${parseFloat(i.price || i.rate).toFixed(2)}</td>
                         <td style="text-align: right;">${parseFloat(i.total).toFixed(2)}</td>
                     </tr>`).join('')}
             </tbody>
@@ -299,31 +299,28 @@ window.generateBill = function() {
         }, "image/png", 1.0);
     });
 
+    // --- முக்கிய மாற்றம் இங்கே ---
     function cleanup() {
-        document.body.removeChild(billDiv);
+        if (document.body.contains(billDiv)) {
+            document.body.removeChild(billDiv);
+        }
+        // கன்பார்ம் மெசேஜ் இல்லாமல் கிளியர் செய்ய:
+        items = []; 
+        localStorage.removeItem('myBillItems');
         document.getElementById("customerName").value = "";
         document.getElementById("customerMobile").value = "";
-        window.clearBill();
+        document.getElementById("paymentType").value = "Cash";
+        window.updateBillTable(); 
+        console.log("Bill cleared silently");
     }
 };
-
-// --- 6. INITIAL LOAD ---
-window.onload = function() {
-    if (sessionStorage.getItem("isLoggedIn") === "true") {
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("main-app").style.display = "block";
-    }
-    window.updateBillTable();
-};
-
-// --- 7. RENDER SALES TABLE (UPDATED WITH MULTI-TOTAL) ---
+// --- 7. RENDER SALES TABLE (FIXED TOTAL FOR 'ALL' BUTTON) ---
 function renderSalesTable(salesData, filterDate = null) {
     const reportTableBody = document.querySelector("#salesReportTable tbody");
     if (!reportTableBody) return;
 
     reportTableBody.innerHTML = "";
     
-    // தனித்தனி டோட்டல் கணக்கிட வேரியபிள்கள்
     let cashTotal = 0;
     let gpayTotal = 0;
     let creditTotal = 0;
@@ -333,54 +330,65 @@ function renderSalesTable(salesData, filterDate = null) {
         Object.keys(salesData).reverse().forEach(key => {
             const sale = salesData[key];
             
+            // தேதி பில்டர் இருந்தால் அந்த தேதி மட்டும், இல்லை என்றால் எல்லா பில்களும்
             if (!filterDate || sale.date === filterDate) {
                 let amt = parseFloat(sale.amount || 0);
-                grandTotal += amt;
+                grandTotal += amt; // மொத்தக் கூட்டல் இங்கே நடக்கிறது
 
-                // பேமெண்ட் டைப் படி பிரித்து கூட்டுதல்
                 let pType = sale.paymentType || 'Cash';
                 if(pType === "Cash") cashTotal += amt;
                 else if(pType === "GPay") gpayTotal += amt;
                 else if(pType === "Credit") creditTotal += amt;
 
                 let row = reportTableBody.insertRow();
-                row.insertCell(0).innerText = `${sale.date} ${sale.time}`;
 
-                let payColor = "green"; 
-                if(pType === "GPay") payColor = "blue";
-                if(pType === "Credit") payColor = "red";
-
-                let amountCell = row.insertCell(1);
-                amountCell.innerHTML = `
-                    <div style="font-weight:bold;">₹${amt.toFixed(2)}</div>
-                    <div style="font-size:11px; color:${payColor}; font-weight:bold;">● ${pType}</div>
+                // 1. பெயர் மற்றும் தேதி
+                let nameCell = row.insertCell(0);
+                nameCell.innerHTML = `
+                    <div style="font-size: 13px; font-weight: bold; color: #000;">${sale.customerName || 'Cash Customer'}</div>
+                    <div style="font-size: 11px; color: #555;">${sale.date} ${sale.time}</div>
                 `;
 
+                // 2. தொகை மற்றும் பேமெண்ட் டைப்
+                let payColor = (pType === "GPay") ? "blue" : (pType === "Credit" ? "red" : "green");
+                let amountCell = row.insertCell(1);
+                amountCell.innerHTML = `
+                    <div style="font-weight: bold; font-size: 15px; color: #000;">₹${amt.toFixed(2)}</div>
+                    <div style="font-size: 11px; color: ${payColor}; font-weight: bold;">● ${pType}</div>
+                `;
+
+                // 3. ஆக்ஷன் பட்டன்கள்
                 let actionCell = row.insertCell(2);
                 actionCell.style.display = "flex";
-                actionCell.style.gap = "10px";
+                actionCell.style.gap = "5px";
                 actionCell.innerHTML = `
                     <button onclick='window.showSaleDetails(${JSON.stringify(sale.items)}, "${sale.customerName}", "${sale.customerMobile}")' 
-                            style="padding:5px 10px; cursor:pointer; background:#000; color:#fff; border:none; border-radius:3px;">View</button>
+                            style="padding:8px; background:#000; color:#fff; border:none; border-radius:3px; font-size:11px; cursor:pointer;">VIEW</button>
                     <button onclick='window.editOldBill("${key}", ${JSON.stringify(sale)})' 
-                            style="padding:5px 10px; cursor:pointer; background:#2196F3; color:#fff; border:none; border-radius:3px;">✏️</button>
+                            style="padding:8px; background:#2196F3; color:#fff; border:none; border-radius:3px; font-size:11px; cursor:pointer;">✏️</button>
                     <button onclick="window.deleteSaleItem('${key}')" 
-                            style="padding:5px 10px; cursor:pointer; background:#ff4d4d; color:#fff; border:none; border-radius:3px;">🗑️</button>
+                            style="padding:8px; background:#ff4d4d; color:#fff; border:none; border-radius:3px; font-size:11px; cursor:pointer;">🗑️</button>
                 `;
             }
         });
     }
 
-    // ரிப்போர்ட் பக்கத்தில் டோட்டல்களைக் காட்டுதல்
+    // டிஸ்ப்ளே அப்டேட்
     if(document.getElementById("cashTotalDisp")) document.getElementById("cashTotalDisp").innerText = cashTotal.toFixed(2);
     if(document.getElementById("gpayTotalDisp")) document.getElementById("gpayTotalDisp").innerText = gpayTotal.toFixed(2);
     if(document.getElementById("creditTotalDisp")) document.getElementById("creditTotalDisp").innerText = creditTotal.toFixed(2);
     
-    // பொதுவான டோட்டல் (Today/Filtered)
-    const todayDisp = document.getElementById("todayTotal");
-    const filteredDisp = document.getElementById("filteredTotal");
-    if (filterDate) { if (filteredDisp) filteredDisp.innerText = grandTotal.toFixed(2); } 
-    else { if (todayDisp) todayDisp.innerText = grandTotal.toFixed(2); }
+    // முக்கியமானது: 'அனைத்தும்' அழுத்தும் போது filteredTotal-லும் தொகையைக் காட்ட வேண்டும்
+    const todayTotalDisp = document.getElementById("todayTotal");
+    const filteredTotalDisp = document.getElementById("filteredTotal");
+
+    if (filterDate) {
+        if (filteredTotalDisp) filteredTotalDisp.innerText = grandTotal.toFixed(2);
+    } else {
+        // 'அனைத்தும்' அழுத்தும் போது இன்றைய வசூல் இடத்திலும் மொத்தத் தொகையைக் காட்டும்
+        if (todayTotalDisp) todayTotalDisp.innerText = grandTotal.toFixed(2);
+        if (filteredTotalDisp) filteredTotalDisp.innerText = grandTotal.toFixed(2);
+    }
 }
 
 // --- 8. SALES DATA LISTENER ---
@@ -497,11 +505,30 @@ window.saveToCloud = function() {
     }
 }
 
-window.clearBill = function() { 
-    items = [];
-    localStorage.removeItem('myBillItems'); 
-    window.updateBillTable();
-}
+// பில்லை கிளியர் செய்யும் போது இன்புட்களையும் கிளியர் செய்ய
+window.clearBill = function() {
+    if (confirm("நிச்சயமாக பில்லை நீக்க வேண்டுமா?")) {
+        // டேபிளை காலி செய்தல்
+        const billBody = document.querySelector("#billTable tbody");
+        if (billBody) billBody.innerHTML = "";
+        
+        // தொகைகளை 0 ஆக்குதல்
+        document.getElementById("totalAmount").innerText = "0";
+        
+        // கஸ்டமர் விவரங்களை கிளியர் செய்தல்
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerMobile").value = "";
+        document.getElementById("paymentType").value = "Cash";
+        
+        // லோக்கல் ஸ்டோரேஜை கிளியர் செய்தல் (நீங்கள் பயன்படுத்தினால்)
+        localStorage.removeItem("currentBillItems");
+        
+        alert("பில் வெற்றிகரமாக நீக்கப்பட்டது!");
+    }
+};
+
+// பில் பிரிண்ட் செய்த பிறகு தானாக கிளியர் ஆக வேண்டுமானால் 
+// generateBill() ஃபங்ஷனின் இறுதியில் window.clearBill() -ஐ கால் செய்யலாம்.
 
 window.removeItem = function(index) { 
     items.splice(index, 1); 
@@ -523,12 +550,12 @@ window.deleteProduct = function(key) { if(confirm("Delete product?")) remove(ref
 
 }
 
-// --- 12. AUTO-FILTER (SELECT செய்தாலே வேலை செய்யும்) ---
+/// --- 12. ADVANCED FILTER (கஸ்டமர் பெயர் மற்றும் தெளிவான பில்டர் வசதி) ---
 window.applyAdvancedFilter = function() {
     const searchDate = document.getElementById("searchDate").value;
     const payType = document.getElementById("filterPaymentType").value;
     
-    // தேதி பாக்ஸ் காலியாக இருந்தால் இன்றைய தேதியை எடுக்கும்
+    // தேதி இல்லை என்றால் இன்றைய தேதியை எடுக்கும்
     let formattedDate = searchDate ? new Date(searchDate).toLocaleDateString() : new Date().toLocaleDateString();
 
     onValue(ref(db, 'dailySales'), (snapshot) => {
@@ -549,34 +576,84 @@ window.applyAdvancedFilter = function() {
 
                 if (dateMatch && typeMatch) {
                     filteredSum += parseFloat(sale.amount || 0);
-
                     let row = reportTableBody.insertRow();
-                    row.insertCell(0).innerText = `${sale.date} ${sale.time}`;
+                    
+                    // 1. கஸ்டமர் பெயர் மற்றும் தேதி நேரம் (இங்கேதான் பெயர் தெரியும்)
+                    let nameCell = row.insertCell(0);
+                    nameCell.innerHTML = `
+                        <div style="font-size: 14px; font-weight: bold; color: #000;">${sale.customerName || 'Cash Customer'}</div>
+                        <div style="font-size: 11px; color: #555;">${sale.date} ${sale.time}</div>
+                    `;
 
                     let payColor = (salePayType === "GPay") ? "blue" : (salePayType === "Credit" ? "red" : "green");
 
-                    row.insertCell(1).innerHTML = `
-                        <div style="font-weight:bold;">₹${parseFloat(sale.amount).toFixed(2)}</div>
+                    // 2. தொகை மற்றும் பேமெண்ட் முறை
+                    let amountCell = row.insertCell(1);
+                    amountCell.innerHTML = `
+                        <div style="font-weight:bold; font-size:15px;">₹${parseFloat(sale.amount).toFixed(2)}</div>
                         <div style="font-size:11px; color:${payColor}; font-weight:bold;">● ${salePayType}</div>
                     `;
 
+                    // 3. ஆக்ஷன் பட்டன்கள்
                     let actionCell = row.insertCell(2);
-                    actionCell.style.display = "flex"; actionCell.style.gap = "10px";
+                    actionCell.style.display = "flex"; actionCell.style.gap = "8px";
                     actionCell.innerHTML = `
                         <button onclick='window.showSaleDetails(${JSON.stringify(sale.items)}, "${sale.customerName}", "${sale.customerMobile}")' 
-                                style="padding:5px 10px; background:#000; color:#fff; border:none; border-radius:3px;">View</button>
+                                style="padding:6px; background:#000; color:#fff; border:none; border-radius:3px; font-size:12px; cursor:pointer;">View</button>
                         <button onclick='window.editOldBill("${key}", ${JSON.stringify(sale)})' 
-                                style="padding:5px 10px; background:#2196F3; color:#fff; border:none; border-radius:3px;">✏️</button>
+                                style="padding:6px; background:#2196F3; color:#fff; border:none; border-radius:3px; font-size:12px; cursor:pointer;">✏️</button>
                     `;
                 }
             });
         }
-
-        // கீழே உள்ள மொத்த தொகையை அப்டேட் செய்தல்
-        if (searchDate) {
-            if(document.getElementById("filteredTotal")) document.getElementById("filteredTotal").innerText = filteredSum.toFixed(2);
-        } else {
-            if(document.getElementById("todayTotal")) document.getElementById("todayTotal").innerText = filteredSum.toFixed(2);
-        }
+        
+        // மொத்த தொகையை அப்டேட் செய்தல்
+        const todayTotal = document.getElementById("todayTotal");
+        const filteredTotal = document.getElementById("filteredTotal");
+        if (searchDate) { if(filteredTotal) filteredTotal.innerText = filteredSum.toFixed(2); }
+        else { if(todayTotal) todayTotal.innerText = filteredSum.toFixed(2); }
+        
     }, { onlyOnce: true });
 };
+
+// --- 13. இன்றைய விற்பனையை Billing Tab-ல் காட்ட (புதிய வசதி) ---
+window.updateBillingTabTotal = function() {
+    // இன்றைய தேதியை எடுக்கும் (e.g., 19/3/2026)
+    const today = new Date().toLocaleDateString();
+    
+    // Firebase-ல் இருந்து விற்பனை விவரங்களை எடுத்தல்
+    onValue(ref(db, 'dailySales'), (snapshot) => {
+        const salesData = snapshot.val();
+        let tTotal = 0, tCash = 0, tGpay = 0, tCredit = 0;
+
+        if (salesData) {
+            Object.values(salesData).forEach(sale => {
+                // இன்றைய தேதியில் நடந்த விற்பனையை மட்டும் கணக்கிடுதல்
+                if (sale.date === today) {
+                    let amt = parseFloat(sale.amount || 0);
+                    tTotal += amt;
+                    
+                    let pType = sale.paymentType || 'Cash';
+                    if (pType === "Cash") tCash += amt;
+                    else if (pType === "GPay") tGpay += amt;
+                    else if (pType === "Credit") tCredit += amt;
+                }
+            });
+        }
+
+        // 1. Billing Tab-ல் உள்ள சிறிய பாக்ஸ்களில் அப்டேட் செய்தல்
+        if(document.getElementById("billTodayCash")) document.getElementById("billTodayCash").innerText = tCash.toFixed(0);
+        if(document.getElementById("billTodayGpay")) document.getElementById("billTodayGpay").innerText = tGpay.toFixed(0);
+        if(document.getElementById("billTodayCredit")) document.getElementById("billTodayCredit").innerText = tCredit.toFixed(0);
+        
+        // 2. "இன்றைய மொத்த விற்பனை" பெரிய பாக்ஸில் அப்டேட் செய்தல்
+        // உங்கள் HTML-ல் இந்த ID இருக்கிறதா என்று பார்த்துக் கொள்ளுங்கள்
+        const grandTotalSpan = document.getElementById("billingTabGrandTotal");
+        if (grandTotalSpan) {
+            grandTotalSpan.innerText = tTotal.toFixed(2);
+        }
+    });
+};
+
+// ஆப் ஓபன் ஆகும்போதே இது வேலை செய்ய வேண்டும் என்பதால் இங்கே கால் செய்கிறோம்
+window.updateBillingTabTotal();

@@ -6,87 +6,66 @@
     <title>NIHA POS</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* மொபைல் மற்றும் டெஸ்க்டாப் இரண்டிற்கும் கச்சிதமான ஹெடர் */
+        /* கச்சிதமான லுக் மற்றும் கலர் செட்டிங்ஸ் */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; }
         .header-wrapper {
-            display: flex;
-            justify-content: space-between; /* லோகோ இடது, பட்டன் வலது */
-            align-items: center;
-            padding: 12px 15px;
-            background: #fff;
-            border-bottom: 2px solid #f1f1f1;
-            width: 100%;
-            box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 15px; background: #ffffff; border-bottom: 2px solid #e1e4e8;
+            position: sticky; top: 0; z-index: 100;
         }
-
-        .logo-area {
-            text-align: left;
-        }
-
-        .logo-area h1 {
-            color: #2c3e50;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            letter-spacing: 1px;
-            font-size: 22px;
-        }
-
-        .logo-area p {
-            margin: 0;
-            font-size: 11px;
-            color: #7f8c8d;
-        }
-
+        .logo-area h1 { color: rgb(19, 45, 21); margin: 0; font-size: 20px; font-weight: 800; }
+        .logo-area p { margin: 0; font-size: 10px; color: #5f6368; }
         .logout-btn {
-            background: #e74c3c !important;
-            color: white !important;
-            border: none;
-            padding: 8px 15px !important;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px !important;
-            font-weight: bold;
-            width: auto !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            white-space: nowrap;
+            background: #d93025 !important; color: white !important; border: none;
+            padding: 6px 12px !important; border-radius: 4px; font-size: 11px !important; font-weight: bold;
         }
+        
+        /* மெனு பட்டன்கள் */
+        .nav-menu { display: flex; background: rgb(199, 241, 203); padding: 5px; gap: 5px; }
+        .nav-menu button {
+            flex: 1; padding: 10px 5px; border: none; background: transparent;
+            color: #bdc1c6; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 4px;
+        }
+        .nav-menu button:hover, .nav-menu button.active { background: #3c4043; color: white; }
 
-        /* டேபிளில் பட்டன்கள் அருகருகே வர */
-        .action-container {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
+        /* இன்புட் ஸ்டைல்ஸ் */
+        .input-row { display: flex; gap: 6px; margin-bottom: 10px; }
+        input, select { 
+            padding: 10px; border: 1px solid #dadce0; border-radius: 6px; 
+            font-size: 14px; outline: none; box-sizing: border-box;
         }
+        input:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
 
-        .action-icon {
-            cursor: pointer;
-            font-size: 20px;
-            transition: transform 0.2s;
+        /* கச்சிதமான வசூல் பாக்ஸ்கள் */
+        .stat-card {
+            flex: 1; background: #fff; padding: 6px; border-radius: 6px;
+            text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .stat-card small { font-size: 9px; display: block; font-weight: bold; color: #5f6368; }
+        .stat-card b { font-size: 13px; }
 
-        /* மொபைல் போனுக்கான கூடுதல் செட்டிங்ஸ் */
-        @media (max-width: 480px) {
-            .logo-area h1 {
-                font-size: 18px;
-            }
-            .logout-btn {
-                padding: 6px 10px !important;
-                font-size: 10px !important;
-            }
+        /* பில் டேபிள் */
+        #billTable { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 8px; overflow: hidden; }
+        #billTable th { background: #f8f9fa; padding: 10px; font-size: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        #billTable td { padding: 10px; font-size: 13px; border-bottom: 1px solid #eee; }
+
+        .total-banner {
+            background: white; padding: 12px; border-radius: 8px; margin: 10px 0;
+            border: 1px solid #e1e4e8; text-align: center;
         }
+        
+        .print-btn { background: #1a73e8 !important; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="login-section" style="text-align: center; margin-top: 100px; padding: 20px;">
-        <div style="max-width: 350px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-            <h1 style="color: #2c3e50; margin-bottom: 5px;">NIHA POS</h1>
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Smart Billing Solution</p>
-            
-            <p style="font-size: 14px; color: #333; font-weight: bold; text-align: left; margin-bottom: 5px;">Admin Login</p>
-            <input type="password" id="adminPass" placeholder="PASSWORD" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-            
-            <button onclick="checkLogin()" style="width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">LOGIN</button>
+    <div id="login-section" style="text-align: center; margin-top: 80px; padding: 20px;">
+        <div style="max-width: 340px; margin: 0 auto; background: rgb(199, 241, 203); padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+            <h1 style="color: #233f1f; margin-bottom: 5px;">NIHA POS</h1>
+            <p style="font-size: 13px; color: #01480b; margin-bottom: 20px;">Smart Billing Solution</p>
+            <p style="font-size: 13px; color: #01480b; margin-bottom: 20px;">Mobile:9943514861</p>
+            <input type="password" id="adminPass" placeholder="PASSWORD" style="width: 100%; padding: 12px; margin-bottom: 15px;">
+            <button onclick="checkLogin()" style="width: 100%; padding: 12px; background: #1ae821; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">LOGIN</button>
         </div>
     </div>
 
@@ -102,82 +81,88 @@
 
         <div class="nav-menu">
             <button onclick="openTab('billing-tab')">BILLING</button>
-            <button onclick="openTab('inventory-tab')">ADD PRODUCTS (CLOUD)</button>
-            <button onclick="openTab('sales-report-tab')">SALES REPORT</button>
+            <button onclick="openTab('inventory-tab')">PRODUCTS</button>
+            <button onclick="openTab('sales-report-tab')">REPORT</button>
         </div>
 
-        <div id="billing-tab" class="tab-content">
-            <div class="container">
-                <h2>POS Billing</h2>
+        <div id="billing-tab" class="tab-content" style="padding: 12px;">
+            
+            <div style="background: rgb(199, 241, 203); padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <input type="text" id="customerName" placeholder="Customer Name" style="width: 100%; margin-bottom: 8px;">
+                <div class="input-row">
+                    <input type="number" id="customerMobile" placeholder="WhatsApp No" style="flex: 1.5;">
+                    <select id="paymentType" style="flex: 1; font-weight: bold; border: 2px solid #1a73e8;">
+                        <option value="Cash">💵 CASH</option>
+                        <option value="GPay">📱 GPAY</option>
+                        <option value="Credit">📝 CREDIT</option>
+                    </select>
+                </div>
+            </div>
 
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="customerName" placeholder="Customer Name (விரும்பினால்)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
-                    
-                    <input type="tel" id="customerMobile" placeholder="WhatsApp Number (e.g. 9943514861)">
-                    <label>Payment Method:</label>
-                       <select id="paymentType" style="width:100%; padding:12px; margin-bottom:15px; border-radius:5px; font-weight:bold; border:2px solid #ddd;">
-                           <option value="Cash" style="color: green;">💵 CASH (ரொக்கம்)</option>
-                           <option value="GPay" style="color: blue;">📱 GPAY / ONLINE</option>
-                           <option value="Credit" style="color: red;">📝 CREDIT (கடன்)</option>
-                       </select>
+            <div style="background: rgb(199, 241, 203); padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="input-row">
+                    <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" style="flex: 2;" oninput="fillPrice()">
+                    <datalist id="productSuggestions"></datalist>
+                    <input type="number" id="itemQty" placeholder="QTY" step="0.001" style="flex: 0.8;" oninput="updateLiveTotal()">
+                    <input type="number" id="itemPrice" placeholder="RATE" style="flex: 1;" oninput="updateLiveTotal()">
                 </div>
 
-                <div class="input-group">
-    <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" oninput="fillPrice()">
-    <datalist id="productSuggestions"></datalist>
-    
-    <input type="number" id="itemQty" placeholder="QTY" step="0.001" oninput="updateLiveTotal()">
-    <input type="number" id="itemPrice" placeholder="RATE" oninput="updateLiveTotal()">
-    
-    <p id="liveTotalDisplay" style="margin: 5px 0; font-size: 14px; color: #2ecc71; font-weight: bold;">Amount: ₹ 0</p>
-    
-    <p id="stockDisplay" style="margin: 5px 0; font-size: 14px; color: #666; font-weight: bold;">Stock: -</p>
-    <button onclick="addItem()">ADD</button>
-</div>
-
-                <div class="sales-report-container" style="background: white; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #ccc; text-align: center;">
-                    <h3 style="margin: 0; font-size: 18px;">இன்றைய மொத்த விற்பனை: <span style="color: green;">₹ <span id="todayTotal">0</span></span></h3>
+                <div style="display: flex; justify-content: center; gap: 25px; margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 4px;">
+                    <div style="font-weight: bold; color: #d32f2f; font-size: 15px;">Amount: ₹<span id="currentProductAmount">0</span></div>
+                    <div style="font-weight: bold; color: #5f6368; font-size: 14px;">Stock: <span id="currentProductStock">-</span></div>
                 </div>
 
-                <table id="billTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Qty</th>
-                            <th>Rate</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <button onclick="addItem()" style="width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-weight: bold; margin-top: 5px;">ADD TO BILL</button>
+            </div>
 
-                <div class="total-section">
-                    <h3>Net Amount: ₹ <span id="totalAmount">0</span></h3>
-                    <button onclick="generateBill()" class="print-btn">BILL PRINT</button>
-                    <button onclick="clearBill()" style="background:red;">CLEAR</button>
+            <div style="display: flex; gap: 6px; margin: 10px 0;">
+                <div class="stat-card" style="border-left: 3px solid #124f20;">
+                    <small>CASH</small><b style="color: #124f20;">₹<span id="billTodayCash">0</span></b>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #1a73e8;">
+                    <small>GPAY</small><b style="color: #124f20;">₹<span id="billTodayGpay">0</span></b>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #d93025;">
+                    <small>CREDIT</small><b style="color: #d93025;">₹<span id="billTodayCredit">0</span></b>
+                </div>
+            </div>
+
+            <div class="total-banner">
+                <h3 style="margin: 0; font-size: 16px; color: #1d412f;">இன்றைய மொத்த விற்பனை: <span style="color: #28a745;">₹ <span id="todayTotal">0</span></span></h3>
+            </div>
+
+            <table id="billTable">
+                <thead>
+                    <tr><th>Name</th><th>Qty</th><th>Rate</th><th>Total</th><th></th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div style="background: rgb(199, 241, 203); padding: 15px; border-radius: 8px; margin-top: 10px; text-align: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
+                <h2 style="margin: 0 0 10px 0; color: #0f2d1a;">Net Amount: ₹ <span id="totalAmount">0</span></h2>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="generateBill()" class="print-btn" style="flex: 2; padding: 15px; border: none; border-radius: 6px; cursor: pointer;">BILL PRINT</button>
+                    <button onclick="clearBill()" style="flex: 1; background: #fce8e6; color: #d93025; border: none; border-radius: 6px; font-weight: bold;">CLEAR</button>
                 </div>
             </div>
         </div>
 
-        <div id="inventory-tab" class="tab-content" style="display:none;">
-            <div class="container cloud-section">
-                <h3>Add New Products</h3>
-                <input type="text" id="pName" placeholder="Product Name">
-                <input type="number" id="pPrice" placeholder="Price">
-                <input type="number" id="pStock" placeholder="Stock Quantity (எண்ணிக்கை)">
-                <button onclick="saveToCloud()">ADD TO CLOUD</button>
+        <div id="inventory-tab" class="tab-content" style="display:none; padding: 12px;">
+            <div style="background: white; padding: 15px; border-radius: 8px;">
+                <h3 style="margin-top:0;">Add Products</h3>
+                <input type="text" id="pName" placeholder="Product Name" style="width: 100%; margin-bottom: 8px;">
+                <div class="input-row">
+                    <input type="number" id="pPrice" placeholder="Price" style="flex: 1;">
+                    <input type="number" id="pStock" placeholder="Stock" style="flex: 1;">
+                </div>
+                <button onclick="saveToCloud()" style="width: 100%; padding: 12px; background: #202124; color: white; border: none; border-radius: 6px; margin-top: 5px;">ADD TO CLOUD</button>
                 
-                <hr>
-                <h3>Available Products in Cloud</h3>
-                <table id="cloudProductTable">
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                
+                <table id="cloudProductTable" style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Edit Stock</th>
-                            <th>Action</th>
+                        <tr style="font-size: 11px; color: #5f6368; text-align: left;">
+                            <th>Product</th><th>Price</th><th>Stock</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -185,80 +170,57 @@
             </div>
         </div>
 
-        <div id="sales-report-tab" class="tab-content" style="display:none;">
-            <div class="container">
-                <h3>விற்பனை அறிக்கை (Sales Report)</h3>
+        <div id="sales-report-tab" class="tab-content" style="display:none; padding: 12px;">
+            <div style="background: white; padding: 15px; border-radius: 8px;">
+                <h3 style="margin-top:0;">Sales Report</h3>
+                <div class="input-row">
+                    <input type="date" id="searchDate" style="flex: 2;">
+                    <button onclick="filterByDate()" style="flex: 1; background: #1d5023; color: white; border: none; border-radius: 6px;">தேடு</button>
+                </div>
+                
+                <select id="filterPaymentType" onchange="window.applyAdvancedFilter()" style="width: 100%; margin: 10px 0;">
+                    <option value="All">All Payments</option>
+                    <option value="Cash">Cash</option>
+                    <option value="GPay">GPay</option>
+                    <option value="Credit">Credit</option>
+                </select>
 
-                <div class="filter-section" style="margin: 15px 0; display: flex; gap: 10px; justify-content: center;">
-                    <input type="date" id="searchDate" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
-
-                    <div style="margin: 10px 0;">
-                        <label style="font-size: 12px; font-weight: bold;">Filter by Payment:</label>
-                        <select id="filterPaymentType" onchange="window.applyAdvancedFilter()" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #4CAF50; font-weight: bold;">
-                            <option value="All">All Payments (அனைத்தும்)</option>
-                            <option value="Cash">💵 Cash Only</option>
-                            <option value="GPay">📱 GPay Only</option>
-                            <option value="Credit">📝 Credit Only (கடன்)</option>
-                        </select>
-                    </div>
-
-                    <button onclick="filterByDate()" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">தேடு</button>
-                    <button onclick="resetFilter()" style="background: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">அனைத்தும்</button>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 10px; border: 1px dashed #ccc;">
+                    <strong>மொத்த வசூல்: ₹ <span id="filteredTotal">0</span></strong>
                 </div>
 
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <strong>அந்த நாளின் மொத்த வசூல்: ₹ <span id="filteredTotal">0</span></strong>
+                <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                    <div class="stat-card"><small>CASH</small><b>₹<span id="cashTotalDisp">0</span></b></div>
+                    <div class="stat-card"><small>GPAY</small><b>₹<span id="gpayTotalDisp">0</span></b></div>
+                    <div class="stat-card"><small>CREDIT</small><b>₹<span id="creditTotalDisp">0</span></b></div>
                 </div>
 
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; font-family: sans-serif;">
-                    <div style="flex: 1; min-width: 100px; background: #e8f5e9; padding: 10px; border-radius: 8px; border-left: 5px solid green;">
-                        <small>CASH</small><br>
-                        <b style="color: green;">₹<span id="cashTotalDisp">0.00</span></b>
-                    </div>
-                    <div style="flex: 1; min-width: 100px; background: #e3f2fd; padding: 10px; border-radius: 8px; border-left: 5px solid blue;">
-                        <small>GPAY</small><br>
-                        <b style="color: blue;">₹<span id="gpayTotalDisp">0.00</span></b>
-                    </div>
-                    <div style="flex: 1; min-width: 100px; background: #ffebee; padding: 10px; border-radius: 8px; border-left: 5px solid red;">
-                        <small>CREDIT</small><br>
-                        <b style="color: red;">₹<span id="creditTotalDisp">0.00</span></b>
-                    </div>
-                </div>
-
-                <table id="salesReportTable">
+                <table id="salesReportTable" style="width: 100%; border-collapse: collapse; font-size: 12px;">
                     <thead>
-                        <tr>
-                            <th>தேதி/நேரம்</th>
-                            <th>மொத்த தொகை</th>
-                            <th>விவரம்</th>
+                        <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                            <th>தேதி/பெயர்</th><th>தொகை</th><th>விவரம்</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
+                <button onclick="resetFilter()" style="width: 100%; margin-top: 15px; padding: 10px; background: #f1f3f4; border: none; border-radius: 6px;">அனைத்தையும் காட்டு</button>
             </div>
         </div>
 
     </div> 
     
     <script type="module" src="script.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <div id="bill-template" style="position: absolute; left: -9999px; width: 300px; padding: 20px; background: #fff; color: #000; font-family: Arial, sans-serif; border: 1px solid #ddd;">
+    <div id="salesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:#ffffff; width:85%; max-width:380px; padding:20px; border-radius:12px;">
+            <h3 style="margin-top:0; color:#1a73e8; border-bottom:1px solid #eee; padding-bottom:10px;">விற்பனை விவரம்</h3>
+            <div id="modalContent" style="margin:15px 0; max-height:250px; overflow-y:auto; font-size: 14px;"></div>
+            <button onclick="document.getElementById('salesModal').style.display='none'" style="width:100%; padding:12px; background:#202124; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">CLOSE</button>
+        </div>
     </div>
 
-    <div id="salesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#fff; width:90%; max-width:400px; padding:20px; border-radius:10px; position:relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-        <h3 style="margin-top:0; border-bottom:2px solid #4CAF50; padding-bottom:10px;">விற்பனை விவரம்</h3>
-        <div id="modalContent" style="margin:20px 0; max-height:300px; overflow-y:auto; font-family: monospace; line-height:1.6;">
-            </div>
-        <button onclick="document.getElementById('salesModal').style.display='none'" 
-                style="width:100%; padding:10px; background:#4CAF50; color:#fff; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
-            CLOSE
-        </button>
-    </div>
-  </div>
-
+    <div id="bill-template" style="position: absolute; left: -9999px; width: 300px; padding: 20px; background: #fff; color: #000; font-family: Arial, sans-serif;"></div>
 
 </body>
 </html>

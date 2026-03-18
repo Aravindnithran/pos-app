@@ -213,7 +213,7 @@ button, .header, .tab-btn.active {
 
 /* ஹோவர் (Mouse வைக்கும் போது) செய்யும் போது நிறம் மாற */
 button:hover {
-    background-color: #62dd8f !important; /* இன்னும் கொஞ்சம் அடர் பச்சை */
+    background-color: #1ca349 !important; /* இன்னும் கொஞ்சம் அடர் பச்சை */
 }
 
 #login-section button {

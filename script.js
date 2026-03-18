@@ -302,7 +302,7 @@ window.generateBill = function() {
             window.clearBill();
         }, 1000); 
 
-    }, 500);
+    }, 1500);
 }
 
 // --- 6. INITIAL LOAD & UTILS ---

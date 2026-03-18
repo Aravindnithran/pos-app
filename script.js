@@ -99,7 +99,7 @@ onValue(ref(db, 'products'), (snapshot) => {
 window.updateStockAmount = function(key, currentStock) {
     let newAmount = prompt("புதிய ஸ்டாக் அளவைத் தட்டச்சு செய்யவும்:", currentStock);
     if (newAmount !== null && newAmount !== "") {
-        let updatedStock = parseFloat(newAmount); // Changed to parseFloat for decimals in stock
+        let updatedStock = parseFloat(newAmount);
         if (!isNaN(updatedStock)) {
             set(ref(db, 'products/' + key + '/productStock'), updatedStock)
             .then(() => alert("Stock Updated!"));
@@ -125,7 +125,7 @@ window.fillPrice = function() {
     }
 }
 
-// --- 5. BILLING LOGIC (NO RELOAD) ---
+// --- 5. BILLING LOGIC ---
 window.updateBillTable = function() {
     let table = document.querySelector("#billTable tbody");
     let totalAmount = 0;
@@ -134,7 +134,6 @@ window.updateBillTable = function() {
         items.forEach((item, index) => {
             let row = table.insertRow();
             row.insertCell(0).innerText = item.name;
-            // Qty-ஐ 0.500 என்று காட்ட .toFixed(3) சேர்த்துள்ளேன்
             row.insertCell(1).innerText = parseFloat(item.qty).toFixed(3);
             row.insertCell(2).innerText = "₹" + parseFloat(item.price).toFixed(2);
             row.insertCell(3).innerText = "₹" + parseFloat(item.total).toFixed(2);
@@ -203,16 +202,17 @@ window.generateBill = function() {
     let finalTotal = parseFloat(document.getElementById("totalAmount").innerText);
     let cName = document.getElementById("customerName").value.trim();
     let cMobile = document.getElementById("customerMobile").value.trim();
+    let pType = document.getElementById("paymentType").value;
     let finalCustomerName = cName !== "" ? cName : "Cash Customer";
     
     if (finalTotal === 0 || items.length === 0) return alert("பில் காலியாக உள்ளது!");
 
-    // --- FIREBASE சேமிப்பு ---
     try {
         push(ref(db, 'dailySales'), {
             customerName: finalCustomerName,
             customerMobile: cMobile,
             amount: finalTotal,
+            paymentType: pType,
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString(),
             items: items 
@@ -228,9 +228,7 @@ window.generateBill = function() {
         });
     } catch (e) { console.error("Firebase Error:", e); }
 
-    // --- பில் டிசைன் (HD Image-ஆக மாற்றுவதற்காக) ---
     let billDiv = document.createElement("div");
-    // தெளிவுக்காக வெள்ளை பின்னணி மற்றும் பார்டர் சேர்த்துள்ளேன்
     billDiv.style.cssText = "width:380px; padding:30px; background:#fff; color:#000; font-family:'Helvetica', Arial, sans-serif; position:fixed; top:-9999px; left:-9999px; border: 1px solid #eee;";
     
     billDiv.innerHTML = `
@@ -276,9 +274,8 @@ window.generateBill = function() {
     `;
     document.body.appendChild(billDiv);
 
-    // --- HTML-ஐ HD படமாக மாற்றுதல் (SCALE: 3) ---
     html2canvas(billDiv, {
-        scale: 3, // இதுதான் படத்தின் தரத்தை (Quality) கூட்டும்
+        scale: 3,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff"
@@ -291,11 +288,7 @@ window.generateBill = function() {
                     files: [file],
                     title: 'AYYAPPAN STORE - Bill',
                     text: `Bill for ${finalCustomerName}`
-                }).then(() => {
-                    cleanup();
-                }).catch(() => {
-                    cleanup();
-                });
+                }).then(() => cleanup()).catch(() => cleanup());
             } else {
                 let link = document.createElement("a");
                 link.download = `Bill_${finalCustomerName}.png`;
@@ -314,7 +307,7 @@ window.generateBill = function() {
     }
 };
 
-// --- 6. INITIAL LOAD & UTILS ---
+// --- 6. INITIAL LOAD ---
 window.onload = function() {
     if (sessionStorage.getItem("isLoggedIn") === "true") {
         document.getElementById("login-section").style.display = "none";
@@ -323,25 +316,176 @@ window.onload = function() {
     window.updateBillTable();
 };
 
+// --- 7. RENDER SALES TABLE (UPDATED WITH MULTI-TOTAL) ---
+function renderSalesTable(salesData, filterDate = null) {
+    const reportTableBody = document.querySelector("#salesReportTable tbody");
+    if (!reportTableBody) return;
+
+    reportTableBody.innerHTML = "";
+    
+    // தனித்தனி டோட்டல் கணக்கிட வேரியபிள்கள்
+    let cashTotal = 0;
+    let gpayTotal = 0;
+    let creditTotal = 0;
+    let grandTotal = 0;
+
+    if (salesData) {
+        Object.keys(salesData).reverse().forEach(key => {
+            const sale = salesData[key];
+            
+            if (!filterDate || sale.date === filterDate) {
+                let amt = parseFloat(sale.amount || 0);
+                grandTotal += amt;
+
+                // பேமெண்ட் டைப் படி பிரித்து கூட்டுதல்
+                let pType = sale.paymentType || 'Cash';
+                if(pType === "Cash") cashTotal += amt;
+                else if(pType === "GPay") gpayTotal += amt;
+                else if(pType === "Credit") creditTotal += amt;
+
+                let row = reportTableBody.insertRow();
+                row.insertCell(0).innerText = `${sale.date} ${sale.time}`;
+
+                let payColor = "green"; 
+                if(pType === "GPay") payColor = "blue";
+                if(pType === "Credit") payColor = "red";
+
+                let amountCell = row.insertCell(1);
+                amountCell.innerHTML = `
+                    <div style="font-weight:bold;">₹${amt.toFixed(2)}</div>
+                    <div style="font-size:11px; color:${payColor}; font-weight:bold;">● ${pType}</div>
+                `;
+
+                let actionCell = row.insertCell(2);
+                actionCell.style.display = "flex";
+                actionCell.style.gap = "10px";
+                actionCell.innerHTML = `
+                    <button onclick='window.showSaleDetails(${JSON.stringify(sale.items)}, "${sale.customerName}", "${sale.customerMobile}")' 
+                            style="padding:5px 10px; cursor:pointer; background:#000; color:#fff; border:none; border-radius:3px;">View</button>
+                    <button onclick='window.editOldBill("${key}", ${JSON.stringify(sale)})' 
+                            style="padding:5px 10px; cursor:pointer; background:#2196F3; color:#fff; border:none; border-radius:3px;">✏️</button>
+                    <button onclick="window.deleteSaleItem('${key}')" 
+                            style="padding:5px 10px; cursor:pointer; background:#ff4d4d; color:#fff; border:none; border-radius:3px;">🗑️</button>
+                `;
+            }
+        });
+    }
+
+    // ரிப்போர்ட் பக்கத்தில் டோட்டல்களைக் காட்டுதல்
+    if(document.getElementById("cashTotalDisp")) document.getElementById("cashTotalDisp").innerText = cashTotal.toFixed(2);
+    if(document.getElementById("gpayTotalDisp")) document.getElementById("gpayTotalDisp").innerText = gpayTotal.toFixed(2);
+    if(document.getElementById("creditTotalDisp")) document.getElementById("creditTotalDisp").innerText = creditTotal.toFixed(2);
+    
+    // பொதுவான டோட்டல் (Today/Filtered)
+    const todayDisp = document.getElementById("todayTotal");
+    const filteredDisp = document.getElementById("filteredTotal");
+    if (filterDate) { if (filteredDisp) filteredDisp.innerText = grandTotal.toFixed(2); } 
+    else { if (todayDisp) todayDisp.innerText = grandTotal.toFixed(2); }
+}
+
+// --- 8. SALES DATA LISTENER ---
 onValue(ref(db, 'dailySales'), (snapshot) => {
     const salesData = snapshot.val();
-    let todaySum = 0;
     const today = new Date().toLocaleDateString();
-    const reportTableBody = document.querySelector("#salesReportTable tbody");
-    if (salesData) {
-        Object.keys(salesData).forEach(key => { if (salesData[key].date === today) todaySum += parseFloat(salesData[key].amount || 0); });
-        if (reportTableBody) {
-            reportTableBody.innerHTML = "";
-            Object.keys(salesData).reverse().forEach(key => {
-                let row = reportTableBody.insertRow();
-                row.insertCell(0).innerText = `${salesData[key].date} ${salesData[key].time}`;
-                row.insertCell(1).innerText = "₹" + salesData[key].amount;
-                row.insertCell(2).innerHTML = `<button onclick="alert('பொருட்கள்: ' + '${salesData[key].items.map(i => i.name).join(", ")}')" style="padding:5px;">View</button>`;
+    renderSalesTable(salesData, today); 
+});
+
+// --- புதிய ஃபங்ஷன்: பழைய பில்லை எடிட் செய்ய ---
+// --- பழைய பில்லை எடிட் செய்ய (S corrected window name) ---
+window.editOldBill = function(saleId, saleData) {
+    if(confirm("இந்த பில்லை மாற்றி அமைக்க வேண்டுமா?")) {
+        
+        // 1. ஸ்டாக்கை பழைய நிலைக்கு கொண்டு வருதல்
+        if (saleData.items) {
+            saleData.items.forEach(oldItem => {
+                Object.keys(cloudProducts).forEach(key => {
+                    if (cloudProducts[key].productName === oldItem.name) {
+                        let restoredStock = (parseFloat(cloudProducts[key].productStock) || 0) + parseFloat(oldItem.qty);
+                        set(ref(db, 'products/' + key + '/productStock'), restoredStock);
+                    }
+                });
             });
         }
+
+        // 2. விவரங்களை லோடு செய்தல்
+        items = saleData.items;
+        localStorage.setItem('myBillItems', JSON.stringify(items));
+        
+        if(document.getElementById("customerName")) document.getElementById("customerName").value = saleData.customerName || "";
+        if(document.getElementById("customerMobile")) document.getElementById("customerMobile").value = saleData.customerMobile || "";
+        if(document.getElementById("paymentType")) document.getElementById("paymentType").value = saleData.paymentType || "Cash";
+        
+        // 3. பழைய பில்லை நீக்குதல்
+        remove(ref(db, 'dailySales/' + saleId));
+
+        window.openTab('billing-tab');
+        window.updateBillTable();
     }
-    if(document.getElementById("todayTotal")) document.getElementById("todayTotal").innerText = todaySum.toFixed(2);
-});
+};
+
+// --- 9. DATE FILTER LOGIC ---
+window.filterByDate = function() {
+    const searchDate = document.getElementById("searchDate").value;
+    if (!searchDate) return alert("தேதியைத் தேர்ந்தெடுக்கவும்!");
+    
+    const formattedDate = new Date(searchDate).toLocaleDateString();
+    
+    onValue(ref(db, 'dailySales'), (snapshot) => {
+        const salesData = snapshot.val();
+        renderSalesTable(salesData, formattedDate); // குறிப்பிட்ட தேதியை மட்டும் காட்டும்
+    }, { onlyOnce: true });
+};
+
+window.resetFilter = function() {
+    document.getElementById("searchDate").value = "";
+    if(document.getElementById("filteredTotal")) document.getElementById("filteredTotal").innerText = "0";
+    
+    onValue(ref(db, 'dailySales'), (snapshot) => {
+        const salesData = snapshot.val();
+        renderSalesTable(salesData); // அனைத்தையும் காட்டும்
+    }, { onlyOnce: true });
+};
+
+// --- 10. DELETE SALE ---
+window.deleteSaleItem = function(saleId) {
+    let password = prompt("விற்பனையை நீக்க Password உள்ளிடவும்:");
+    const SECRET_KEY = "1234"; 
+
+    if (password === SECRET_KEY) {
+        if (confirm("நிச்சயமாக இந்த பில்லை மட்டும் நீக்க வேண்டுமா?")) {
+            remove(ref(db, 'dailySales/' + saleId)).then(() => alert("நீக்கப்பட்டது!"));
+        }
+    } else if (password !== null) {
+        alert("தவறான பாஸ்வேர்ட்!");
+    }
+}
+
+// --- 11. POPUP BOX (MODAL) LOGIC ---
+window.showSaleDetails = function(items, cName, cMobile) {
+    const modal = document.getElementById('salesModal');
+    const content = document.getElementById('modalContent');
+    
+    let html = `
+        <div style="background:#f1f8e9; padding:10px; border-radius:5px; margin-bottom:15px; border-left:5px solid #4CAF50;">
+            <p style="margin:0; font-weight:bold; color:#2e7d32;">Customer: ${cName || 'Cash Customer'}</p>
+            <p style="margin:5px 0 0 0; font-size:13px; color:#666;">Mobile: ${cMobile || 'N/A'}</p>
+        </div>
+    `;
+
+    html += "<table style='width:100%; border-collapse:collapse; font-family: sans-serif;'>";
+    html += "<tr style='background:#f5f5f5; border-bottom:2px solid #ddd;'><th style='text-align:left; padding:8px;'>Item</th><th style='text-align:right; padding:8px;'>Qty</th></tr>";
+    
+    items.forEach(item => {
+        html += `<tr style='border-bottom:1px solid #eee;'>
+                    <td style='padding:10px 8px;'>${item.name}</td>
+                    <td style='text-align:right; padding:10px 8px;'>${parseFloat(item.qty).toFixed(3)}</td>
+                 </tr>`;
+    });
+    html += "</table>";
+    
+    content.innerHTML = html;
+    modal.style.display = 'flex'; 
+};
 
 window.saveToCloud = function() {
     const name = document.getElementById("pName").value;
@@ -372,69 +516,67 @@ window.editItem = function(index) {
     document.getElementById("itemPrice").value = item.price;
     editIndex = index;
     document.querySelector('button[onclick="addItem()"]').innerText = 'UPDATE';
-    window.updateLiveTotal(); // Update live total when editing
+    window.updateLiveTotal();
 }
 
-window.deleteProduct = function(key) { if(confirm("Delete product?")) remove(ref(db, 'products/' + key)); }
+window.deleteProduct = function(key) { if(confirm("Delete product?")) remove(ref(db, 'products/' + key)); 
 
-window.filterByDate = function() {
+}
+
+// --- 12. AUTO-FILTER (SELECT செய்தாலே வேலை செய்யும்) ---
+window.applyAdvancedFilter = function() {
     const searchDate = document.getElementById("searchDate").value;
-    if (!searchDate) return alert("தேதியைத் தேர்ந்தெடுக்கவும்!");
-    const formattedDate = new Date(searchDate).toLocaleDateString();
+    const payType = document.getElementById("filterPaymentType").value;
+    
+    // தேதி பாக்ஸ் காலியாக இருந்தால் இன்றைய தேதியை எடுக்கும்
+    let formattedDate = searchDate ? new Date(searchDate).toLocaleDateString() : new Date().toLocaleDateString();
+
     onValue(ref(db, 'dailySales'), (snapshot) => {
         const salesData = snapshot.val();
         const reportTableBody = document.querySelector("#salesReportTable tbody");
+        if (!reportTableBody) return;
+
+        reportTableBody.innerHTML = "";
         let filteredSum = 0;
-        if (reportTableBody && salesData) {
-            reportTableBody.innerHTML = "";
-            Object.keys(salesData).forEach(key => {
-                if (salesData[key].date === formattedDate) {
-                    filteredSum += parseFloat(salesData[key].amount);
+
+        if (salesData) {
+            Object.keys(salesData).reverse().forEach(key => {
+                const sale = salesData[key];
+                const salePayType = sale.paymentType || 'Cash';
+
+                const dateMatch = (sale.date === formattedDate);
+                const typeMatch = (payType === "All" || salePayType === payType);
+
+                if (dateMatch && typeMatch) {
+                    filteredSum += parseFloat(sale.amount || 0);
+
                     let row = reportTableBody.insertRow();
-                    row.insertCell(0).innerText = `${salesData[key].date} ${salesData[key].time}`;
-                    row.insertCell(1).innerText = "₹" + salesData[key].amount;
-                    row.insertCell(2).innerHTML = `<button onclick="alert('பொருட்கள்: ' + '${salesData[key].items.map(i => i.name).join(", ")}')" style="padding:5px;">View</button>`;
+                    row.insertCell(0).innerText = `${sale.date} ${sale.time}`;
+
+                    let payColor = (salePayType === "GPay") ? "blue" : (salePayType === "Credit" ? "red" : "green");
+
+                    row.insertCell(1).innerHTML = `
+                        <div style="font-weight:bold;">₹${parseFloat(sale.amount).toFixed(2)}</div>
+                        <div style="font-size:11px; color:${payColor}; font-weight:bold;">● ${salePayType}</div>
+                    `;
+
+                    let actionCell = row.insertCell(2);
+                    actionCell.style.display = "flex"; actionCell.style.gap = "10px";
+                    actionCell.innerHTML = `
+                        <button onclick='window.showSaleDetails(${JSON.stringify(sale.items)}, "${sale.customerName}", "${sale.customerMobile}")' 
+                                style="padding:5px 10px; background:#000; color:#fff; border:none; border-radius:3px;">View</button>
+                        <button onclick='window.editOldBill("${key}", ${JSON.stringify(sale)})' 
+                                style="padding:5px 10px; background:#2196F3; color:#fff; border:none; border-radius:3px;">✏️</button>
+                    `;
                 }
             });
-            document.getElementById("filteredTotal").innerText = filteredSum.toFixed(2);
+        }
+
+        // கீழே உள்ள மொத்த தொகையை அப்டேட் செய்தல்
+        if (searchDate) {
+            if(document.getElementById("filteredTotal")) document.getElementById("filteredTotal").innerText = filteredSum.toFixed(2);
+        } else {
+            if(document.getElementById("todayTotal")) document.getElementById("todayTotal").innerText = filteredSum.toFixed(2);
         }
     }, { onlyOnce: true });
 };
-
-window.resetFilter = function() {
-    document.getElementById("searchDate").value = "";
-    document.getElementById("filteredTotal").innerText = "0";
-    location.reload(); 
-};
-
-
-///////////////////////////////////////////sales report password set/////////////////////////////////////////////
-
-// ஒரு குறிப்பிட்ட சேல்ஸ் டேட்டாவை மட்டும் நீக்க:
-window.deleteSaleItem = function(saleId) {
-    // 1. முதலில் ரகசிய பாஸ்வேர்ட் கேட்கும்
-    let password = prompt("இந்த விற்பனையை நீக்க ரகசிய கடவுச்சொல்லை (Password) உள்ளிடவும்:");
-    
-    // 2. பாஸ்வேர்ட் சரிபார்ப்பு (இங்கே 1234-க்கு பதில் உங்கள் பாஸ்வேர்டை மாற்றிக்கொள்ளுங்கள்)
-    const SECRET_KEY = "1"; 
-
-    if (password === null) return; // 'Cancel' அழுத்தினால் வெளியேறும்
-
-    if (password === SECRET_KEY) {
-        if (confirm("நிச்சயமாக இந்த ஒரு விற்பனை கணக்கை மட்டும் நீக்க வேண்டுமா?")) {
-            const itemRef = ref(db, 'dailySales/' + saleId);
-            
-            remove(itemRef)
-            .then(() => {
-                alert("விற்பனை வெற்றிகரமாக நீக்கப்பட்டது!");
-                // டேபிளை மீண்டும் புதுப்பிக்க (Update)
-                if(typeof window.loadSales === 'function') window.loadSales();
-            })
-            .catch((error) => {
-                alert("நீக்குவதில் சிக்கல்: " + error.message);
-            });
-        }
-    } else {
-        alert("தவறான பாஸ்வேர்ட்! உங்களால் நீக்க முடியாது.");
-    }
-}

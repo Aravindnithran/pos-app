@@ -228,25 +228,28 @@ window.generateBill = function() {
         });
     } catch (e) { console.error("Firebase Error:", e); }
 
-    // --- பில் டிசைன் (Image-ஆக மாற்றுவதற்காக) ---
+    // --- பில் டிசைன் (HD Image-ஆக மாற்றுவதற்காக) ---
     let billDiv = document.createElement("div");
-    // அகலத்தை 400px ஆக உயர்த்தியுள்ளேன் (4 காலம்கள் பிடிப்பதற்காக)
-    billDiv.style.cssText = "width:400px; padding:25px; background:#fff; color:#000; font-family:Arial, sans-serif; position:fixed; top:-9999px; left:-9999px;";
+    // தெளிவுக்காக வெள்ளை பின்னணி மற்றும் பார்டர் சேர்த்துள்ளேன்
+    billDiv.style.cssText = "width:380px; padding:30px; background:#fff; color:#000; font-family:'Helvetica', Arial, sans-serif; position:fixed; top:-9999px; left:-9999px; border: 1px solid #eee;";
     
     billDiv.innerHTML = `
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
-            <h2 style="margin: 0; font-size: 22px;">AYYAPPAN STORE</h2>
-            <p style="margin: 4px 0; font-size: 13px;">No:135, P.H. ROAD, MADURAVOYAL</p>
-            <p style="margin: 4px 0; font-size: 13px;">Cell: 9943514861</p>
+        <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <h1 style="margin: 0; font-size: 26px; letter-spacing: 1px;">AYYAPPAN STORE</h1>
+            <p style="margin: 5px 0; font-size: 14px;">No:135, P.H. ROAD, MADURAVOYAL</p>
+            <p style="margin: 5px 0; font-size: 14px; font-weight: bold;">Cell: 9943514861</p>
         </div>
-        <div style="margin-bottom: 10px; font-size: 13px;">
-            <p style="margin: 2px 0;"><b>Date:</b> ${new Date().toLocaleString()}</p>
-            <p style="margin: 2px 0;"><b>Customer:</b> ${finalCustomerName}</p>
+        <div style="margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between;">
+            <span><b>Date:</b> ${new Date().toLocaleDateString()}</span>
+            <span><b>Time:</b> ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
         </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <div style="margin-bottom: 15px; font-size: 14px;">
+            <p style="margin: 0;"><b>Customer:</b> ${finalCustomerName}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <thead>
-                <tr style="border-bottom: 1px dashed #000;">
-                    <th style="text-align: left; padding: 5px 0;">ITEM</th>
+                <tr style="border-bottom: 2px solid #000;">
+                    <th style="text-align: left; padding: 8px 0;">ITEM</th>
                     <th style="text-align: center;">QTY</th>
                     <th style="text-align: center;">RATE</th>
                     <th style="text-align: right;">AMOUNT</th>
@@ -254,26 +257,32 @@ window.generateBill = function() {
             </thead>
             <tbody>
                 ${items.map(i => `
-                    <tr>
-                        <td style="padding: 5px 0;">${i.name}</td>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px 0; font-weight: bold;">${i.name}</td>
                         <td style="text-align: center;">${parseFloat(i.qty).toFixed(3)}</td>
                         <td style="text-align: center;">${parseFloat(i.price).toFixed(2)}</td>
                         <td style="text-align: right;">${parseFloat(i.total).toFixed(2)}</td>
                     </tr>`).join('')}
             </tbody>
         </table>
-        <div style="margin-top: 15px; border-top: 2px solid #000; padding-top: 10px; text-align: right;">
-            <b style="font-size: 18px;">Grand Total: ₹${finalTotal.toFixed(2)}</b>
+        <div style="margin-top: 20px; border-top: 3px solid #000; padding-top: 15px; text-align: right;">
+            <span style="font-size: 14px; font-weight: bold;">GRAND TOTAL</span><br>
+            <b style="font-size: 24px;">₹${finalTotal.toFixed(2)}</b>
         </div>
-        <div style="text-align: center; margin-top: 25px; font-size: 12px; color: #555;">
-            <p style="margin: 2px 0;">Thank you! Visit Again!</p>
-            <p style="margin: 2px 0; font-style: italic;">Digital Receipt via NIHA POS</p>
+        <div style="text-align: center; margin-top: 30px; font-size: 13px; border-top: 1px dashed #ccc; padding-top: 15px;">
+            <p style="margin: 3px 0; font-weight: bold;">Thank you! Visit Again!</p>
+            <p style="margin: 3px 0; color: #777;">Digital Receipt via NIHA POS</p>
         </div>
     `;
     document.body.appendChild(billDiv);
 
-    // --- HTML-ஐ படமாக மாற்றுதல் ---
-    html2canvas(billDiv).then(canvas => {
+    // --- HTML-ஐ HD படமாக மாற்றுதல் (SCALE: 3) ---
+    html2canvas(billDiv, {
+        scale: 3, // இதுதான் படத்தின் தரத்தை (Quality) கூட்டும்
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+    }).then(canvas => {
         canvas.toBlob(blob => {
             const file = new File([blob], `Bill_${finalCustomerName}.png`, { type: "image/png" });
             
@@ -283,24 +292,22 @@ window.generateBill = function() {
                     title: 'AYYAPPAN STORE - Bill',
                     text: `Bill for ${finalCustomerName}`
                 }).then(() => {
-                    document.body.removeChild(billDiv);
-                    finishBill();
+                    cleanup();
                 }).catch(() => {
-                    document.body.removeChild(billDiv);
+                    cleanup();
                 });
             } else {
-                // ஷேர் வசதி இல்லையெனில் படம் டவுன்லோட் ஆகும்
                 let link = document.createElement("a");
                 link.download = `Bill_${finalCustomerName}.png`;
-                link.href = canvas.toDataURL();
+                link.href = canvas.toDataURL("image/png", 1.0);
                 link.click();
-                document.body.removeChild(billDiv);
-                finishBill();
+                cleanup();
             }
-        });
+        }, "image/png", 1.0);
     });
 
-    function finishBill() {
+    function cleanup() {
+        document.body.removeChild(billDiv);
         document.getElementById("customerName").value = "";
         document.getElementById("customerMobile").value = "";
         window.clearBill();

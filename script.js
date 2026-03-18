@@ -202,7 +202,7 @@ window.updateLiveTotal = function() {
 window.generateBill = function() {
     let finalTotal = parseFloat(document.getElementById("totalAmount").innerText);
     let cName = document.getElementById("customerName").value.trim();
-    let cMobile = document.getElementById("customerMobile").value.trim(); // மொபைல் எண் வாங்குதல்
+    let cMobile = document.getElementById("customerMobile").value.trim();
     let finalCustomerName = cName !== "" ? cName : "Cash Customer";
     
     if (finalTotal === 0 || items.length === 0) return alert("பில் காலியாக உள்ளது!");
@@ -211,14 +211,13 @@ window.generateBill = function() {
     try {
         push(ref(db, 'dailySales'), {
             customerName: finalCustomerName,
-            customerMobile: cMobile, // மொபைல் எண்ணையும் டேட்டாபேஸில் சேமிக்கிறோம்
+            customerMobile: cMobile,
             amount: finalTotal,
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString(),
             items: items 
         });
 
-        // ஸ்டாக் குறைக்கும் லாஜிக் (ஏற்கனவே உள்ளது)
         items.forEach(billItem => {
             Object.keys(cloudProducts).forEach(key => {
                 if (cloudProducts[key].productName === billItem.name) {
@@ -229,8 +228,17 @@ window.generateBill = function() {
         });
     } catch (e) { console.error(e); }
 
-    // --- பிரிண்ட் விண்டோ (3-Inch Thermal Design) ---
+    // --- 3-Inch Thermal Design ---
     let printWindow = window.open('', '_blank', 'width=400,height=600');
+    
+    let tableContent = items.map(i => `
+        <tr>
+            <td>${i.name}</td>
+            <td>${parseFloat(i.qty).toFixed(3)}</td>
+            <td>${i.price}</td>
+            <td style="text-align:right;">${i.total.toFixed(2)}</td>
+        </tr>`).join('');
+
     printWindow.document.write(`
         <html><head><style>
             @page { size: 80mm auto; margin: 0; }
@@ -249,14 +257,12 @@ window.generateBill = function() {
             <p>Cell: 9943514861</p>
             <div class="dashed-line"></div>
             <p style="text-align:left;">Date: ${new Date().toLocaleString()}</p>
-            <p style="text-align:left;"><b>Cust: ${finalCustomerName} ${cMobile ? '('+cMobile+')' : ''}</b></p>
+            <p style="text-align:left;"><b>Cust: ${finalCustomerName}</b></p>
             <div class="dashed-line"></div>
         </div>
         <table>
             <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
-            <tbody>
-            ${items.map(i => `<tr><td>${i.name}</td><td>${parseFloat(i.qty).toFixed(3)}</td><td>${i.price}</td><td style="text-align:right;">${i.total.toFixed(2)}</td></tr>`).join('')}
-            </tbody>
+            <tbody>${tableContent}</tbody>
         </table>
         <div class="dashed-line"></div>
         <div class="total-row">Grand Total: ₹${finalTotal.toFixed(2)}</div>
@@ -264,45 +270,41 @@ window.generateBill = function() {
         <p style="text-align:center; font-size:11px;">Thank you! Visit Again!</p>
         </body></html>
     `);
-    // ... மேலே உள்ள கோடுகள் அப்படியே இருக்கட்டும் ...
-
     printWindow.document.close();
 
-    // வாட்ஸ்அப் மெசேஜ் டெக்ஸ்ட்
-    let billSummary = `*AYYAPPAN STORE - BILL*%0A`;
-    billSummary += `Date: ${new Date().toLocaleDateString()}%0A`;
-    billSummary += `Customer: ${finalCustomerName}%0A`;
-    billSummary += `--------------------------%0A`;
-    items.forEach(i => {
-        billSummary += `${i.name} - ${parseFloat(i.qty).toFixed(3)} x ${i.price} = ₹${i.total.toFixed(2)}%0A`;
-    });
-    billSummary += `--------------------------%0A`;
-    billSummary += `*Grand Total: ₹${finalTotal.toFixed(2)}*%0A`;
-    billSummary += `Thank you! Visit Again!`;
+    // --- வாட்ஸ்அப் மெசேஜ் தயார் செய்தல் ---
+    let itemsText = items.map(i => `${i.name} - ${parseFloat(i.qty).toFixed(3)} x ${i.price} = ₹${i.total.toFixed(2)}`).join('%0A');
+    
+    let billSummary = `*AYYAPPAN STORE - BILL*%0A` +
+                      `Date: ${new Date().toLocaleDateString()}%0A` +
+                      `Customer: ${finalCustomerName}%0A` +
+                      `--------------------------%0A` +
+                      itemsText + `%0A` +
+                      `--------------------------%0A` +
+                      `*Grand Total: ₹${finalTotal.toFixed(2)}*%0A` +
+                      `Thank you! Visit Again!`;
 
-    // முக்கியமான மாற்றம் இங்கே:
+    // மொபைலில் பிரிண்ட் மற்றும் வாட்ஸ்அப் சரியாக வர:
     setTimeout(() => { 
         printWindow.print(); 
         
-        // பிரிண்ட் கொடுத்த பிறகு, 1 வினாடி கழித்து வாட்ஸ்அப் கேட்கும்
+        // பிரிண்ட் விண்டோ கேன்சல் அல்லது முடிந்த பிறகு வாட்ஸ்அப் கேட்கும்
         setTimeout(() => {
             if(confirm("பில்லை WhatsApp-ல் அனுப்பலாமா?")) {
                 let waLink = cMobile !== "" 
-                    ? `https://wa.me/91${cMobile}?text=${billSummary}` 
-                    : `https://wa.me/?text=${billSummary}`;
+                    ? "https://wa.me/91" + cMobile + "?text=" + billSummary
+                    : "https://wa.me/?text=" + billSummary;
                 
-                // புதிய டேப்பில் வாட்ஸ்அப் திறக்கும்
                 window.open(waLink, '_blank');
             }
             
-            // எல்லாம் முடிந்த பிறகு விண்டோவை மூடி, பில்லை கிளியர் செய்யவும்
             printWindow.close(); 
             document.getElementById("customerName").value = "";
             document.getElementById("customerMobile").value = "";
             window.clearBill();
-        }, 1000); 
+        }, 1500); 
 
-    }, 1500);
+    }, 1000);
 }
 
 // --- 6. INITIAL LOAD & UTILS ---

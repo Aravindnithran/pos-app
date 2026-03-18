@@ -226,85 +226,86 @@ window.generateBill = function() {
                 }
             });
         });
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Firebase Error:", e); }
 
-    // --- 2. வாட்ஸ்அப் மெசேஜ் தயார் செய்தல் ---
-    let itemsText = items.map(i => `${i.name} - ${parseFloat(i.qty).toFixed(3)} x ${i.price} = ₹${i.total.toFixed(2)}`).join('%0A');
-    let billSummary = `*AYYAPPAN STORE - BILL*%0A` +
-                      `Date: ${new Date().toLocaleDateString()}%0A` +
-                      `Customer: ${finalCustomerName}%0A` +
-                      `--------------------------%0A` +
-                      itemsText + `%0A` +
-                      `--------------------------%0A` +
-                      `*Grand Total: ₹${finalTotal.toFixed(2)}*%0A` +
-                      `Thank you! Visit Again!`;
+    // --- 2. பில் டிசைன் (Image-ஆக மாற்றுவதற்காக) ---
+    // இதற்காக ஒரு தற்காலிக டிவ் (Div) உருவாக்குகிறோம்
+    let billDiv = document.createElement("div");
+    billDiv.style.cssText = "width:350px; padding:25px; background:#fff; color:#000; font-family:Arial, sans-serif; position:fixed; top:-9999px; left:-9999px;";
+    
+    billDiv.innerHTML = `
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
+            <h2 style="margin: 0; font-size: 22px;">AYYAPPAN STORE</h2>
+            <p style="margin: 4px 0; font-size: 13px;">No:135, P.H. ROAD, MADURAVOYAL</p>
+            <p style="margin: 4px 0; font-size: 13px;">Cell: 9943514861</p>
+        </div>
+        <div style="margin-bottom: 10px; font-size: 13px;">
+            <p style="margin: 2px 0;"><b>Date:</b> ${new Date().toLocaleString()}</p>
+            <p style="margin: 2px 0;"><b>Customer:</b> ${finalCustomerName}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="border-bottom: 1px dashed #000;">
+                    <th style="text-align: left; padding: 5px 0;">Item</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${items.map(i => `
+                    <tr>
+                        <td style="padding: 5px 0;">${i.name}</td>
+                        <td style="text-align: center;">${parseFloat(i.qty).toFixed(3)}</td>
+                        <td style="text-align: right;">₹${i.total.toFixed(2)}</td>
+                    </tr>`).join('')}
+            </tbody>
+        </table>
+        <div style="margin-top: 15px; border-top: 2px solid #000; padding-top: 10px; text-align: right;">
+            <b style="font-size: 18px;">Grand Total: ₹${finalTotal.toFixed(2)}</b>
+        </div>
+        <div style="text-align: center; margin-top: 25px; font-size: 12px; color: #555;">
+            <p style="margin: 2px 0;">Thank you! Visit Again!</p>
+            <p style="margin: 2px 0; font-style: italic;">Digital Receipt</p>
+        </div>
+    `;
+    document.body.appendChild(billDiv);
 
-    // --- 3. தேர்வு செய்யும் வசதி (Print or WhatsApp) ---
-    // ஒரு அழகான அலர்ட் பாக்ஸ் மூலம் கேட்கிறோம்
-    let choice = confirm("பில்லை என்ன செய்ய வேண்டும்?\n\nOK - WhatsApp அனுப்ப\nCancel - Printer-ல் பிரிண்ட் எடுக்க");
+    // --- 3. HTML-ஐ படமாக (Image) மாற்றுதல் ---
+    html2canvas(billDiv).then(canvas => {
+        canvas.toBlob(blob => {
+            const file = new File([blob], "Bill.png", { type: "image/png" });
+            
+            // மொபைலில் ஷேர் (Share) வசதியைப் பயன்படுத்துதல்
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    files: [file],
+                    title: 'AYYAPPAN STORE - Bill',
+                    text: `Bill for ${finalCustomerName}`
+                }).then(() => {
+                    document.body.removeChild(billDiv);
+                    finishBill();
+                }).catch(() => {
+                    document.body.removeChild(billDiv);
+                    alert("Sharing failed. You can print instead.");
+                });
+            } else {
+                // ஷேர் வசதி இல்லையெனில் படம் டவுன்லோட் ஆகும்
+                let link = document.createElement("a");
+                link.download = `Bill_${finalCustomerName}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                document.body.removeChild(billDiv);
+                finishBill();
+            }
+        });
+    });
 
-    if (choice) {
-        // --- WHATSAPP அனுப்பும் முறை ---
-        let waLink = cMobile !== "" 
-            ? "https://wa.me/91" + cMobile + "?text=" + billSummary
-            : "https://wa.me/?text=" + billSummary;
-        window.open(waLink, '_blank');
-        finishBill();
-    } else {
-        // --- PRINTER-ல் பிரிண்ட் எடுக்கும் முறை ---
-        let printWindow = window.open('', '_blank', 'width=400,height=600');
-        let tableContent = items.map(i => `
-            <tr>
-                <td>${i.name}</td>
-                <td>${parseFloat(i.qty).toFixed(3)}</td>
-                <td>${i.price}</td>
-                <td style="text-align:right;">${i.total.toFixed(2)}</td>
-            </tr>`).join('');
-
-        printWindow.document.write(`
-            <html><head><style>
-                @page { size: 80mm auto; margin: 0; }
-                body { font-family: 'Arial', sans-serif; width: 72mm; margin: 0 auto; padding: 5px; font-size: 13px; line-height: 1.2; }
-                .header { text-align: center; }
-                .store-name { font-size: 16px; font-weight: bold; margin: 0; }
-                .dashed-line { border-top: 1px dashed #000; margin: 5px 0; }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                th { text-align: left; border-bottom: 1px dashed #000; padding: 3px 0; }
-                td { padding: 4px 0; }
-                .total-row { font-weight: bold; font-size: 14px; margin-top: 10px; text-align: right; }
-            </style></head><body>
-            <div class="header">
-                <p class="store-name">AYYAPPAN STORE</p>
-                <p style="margin:2px 0;">No:135, P.H. ROAD, MADURAVOYAL</p>
-                <div class="dashed-line"></div>
-                <p style="text-align:left; margin:2px 0;">Date: ${new Date().toLocaleString()}</p>
-                <div class="dashed-line"></div>
-            </div>
-            <table>
-                <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
-                <tbody>${tableContent}</tbody>
-            </table>
-            <div class="dashed-line"></div>
-            <div class="total-row">Total: ₹${finalTotal.toFixed(2)}</div>
-            </body></html>
-        `);
-        printWindow.document.close();
-        
-        // மொபைல் பிரீவியூ எர்ரர் வராமல் இருக்க சிறிய இடைவெளி
-        setTimeout(() => { 
-            printWindow.print(); 
-            printWindow.close();
-            finishBill();
-        }, 1000);
-    }
-
-    // பில்லை கிளியர் செய்யும் பொதுவான ஃபங்க்ஷன்
     function finishBill() {
         document.getElementById("customerName").value = "";
         document.getElementById("customerMobile").value = "";
         window.clearBill();
     }
-}
+};
 
 // --- 6. INITIAL LOAD & UTILS ---
 window.onload = function() {

@@ -406,3 +406,35 @@ window.resetFilter = function() {
     document.getElementById("filteredTotal").innerText = "0";
     location.reload(); 
 };
+
+
+///////////////////////////////////////////sales report password set/////////////////////////////////////////////
+
+// ஒரு குறிப்பிட்ட சேல்ஸ் டேட்டாவை மட்டும் நீக்க:
+window.deleteSaleItem = function(saleId) {
+    // 1. முதலில் ரகசிய பாஸ்வேர்ட் கேட்கும்
+    let password = prompt("இந்த விற்பனையை நீக்க ரகசிய கடவுச்சொல்லை (Password) உள்ளிடவும்:");
+    
+    // 2. பாஸ்வேர்ட் சரிபார்ப்பு (இங்கே 1234-க்கு பதில் உங்கள் பாஸ்வேர்டை மாற்றிக்கொள்ளுங்கள்)
+    const SECRET_KEY = "1"; 
+
+    if (password === null) return; // 'Cancel' அழுத்தினால் வெளியேறும்
+
+    if (password === SECRET_KEY) {
+        if (confirm("நிச்சயமாக இந்த ஒரு விற்பனை கணக்கை மட்டும் நீக்க வேண்டுமா?")) {
+            const itemRef = ref(db, 'dailySales/' + saleId);
+            
+            remove(itemRef)
+            .then(() => {
+                alert("விற்பனை வெற்றிகரமாக நீக்கப்பட்டது!");
+                // டேபிளை மீண்டும் புதுப்பிக்க (Update)
+                if(typeof window.loadSales === 'function') window.loadSales();
+            })
+            .catch((error) => {
+                alert("நீக்குவதில் சிக்கல்: " + error.message);
+            });
+        }
+    } else {
+        alert("தவறான பாஸ்வேர்ட்! உங்களால் நீக்க முடியாது.");
+    }
+}

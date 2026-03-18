@@ -207,7 +207,7 @@ window.generateBill = function() {
     
     if (finalTotal === 0 || items.length === 0) return alert("பில் காலியாக உள்ளது!");
 
-    // --- 1. FIREBASE சேமிப்பு ---
+    // --- FIREBASE சேமிப்பு ---
     try {
         push(ref(db, 'dailySales'), {
             customerName: finalCustomerName,
@@ -228,10 +228,10 @@ window.generateBill = function() {
         });
     } catch (e) { console.error("Firebase Error:", e); }
 
-    // --- 2. பில் டிசைன் (Image-ஆக மாற்றுவதற்காக) ---
-    // இதற்காக ஒரு தற்காலிக டிவ் (Div) உருவாக்குகிறோம்
+    // --- பில் டிசைன் (Image-ஆக மாற்றுவதற்காக) ---
     let billDiv = document.createElement("div");
-    billDiv.style.cssText = "width:350px; padding:25px; background:#fff; color:#000; font-family:Arial, sans-serif; position:fixed; top:-9999px; left:-9999px;";
+    // அகலத்தை 400px ஆக உயர்த்தியுள்ளேன் (4 காலம்கள் பிடிப்பதற்காக)
+    billDiv.style.cssText = "width:400px; padding:25px; background:#fff; color:#000; font-family:Arial, sans-serif; position:fixed; top:-9999px; left:-9999px;";
     
     billDiv.innerHTML = `
         <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
@@ -246,9 +246,10 @@ window.generateBill = function() {
         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <thead>
                 <tr style="border-bottom: 1px dashed #000;">
-                    <th style="text-align: left; padding: 5px 0;">Item</th>
-                    <th style="text-align: center;">Qty</th>
-                    <th style="text-align: right;">Total</th>
+                    <th style="text-align: left; padding: 5px 0;">ITEM</th>
+                    <th style="text-align: center;">QTY</th>
+                    <th style="text-align: center;">RATE</th>
+                    <th style="text-align: right;">AMOUNT</th>
                 </tr>
             </thead>
             <tbody>
@@ -256,7 +257,8 @@ window.generateBill = function() {
                     <tr>
                         <td style="padding: 5px 0;">${i.name}</td>
                         <td style="text-align: center;">${parseFloat(i.qty).toFixed(3)}</td>
-                        <td style="text-align: right;">₹${i.total.toFixed(2)}</td>
+                        <td style="text-align: center;">${parseFloat(i.price).toFixed(2)}</td>
+                        <td style="text-align: right;">${parseFloat(i.total).toFixed(2)}</td>
                     </tr>`).join('')}
             </tbody>
         </table>
@@ -265,17 +267,16 @@ window.generateBill = function() {
         </div>
         <div style="text-align: center; margin-top: 25px; font-size: 12px; color: #555;">
             <p style="margin: 2px 0;">Thank you! Visit Again!</p>
-            <p style="margin: 2px 0; font-style: italic;">Digital Receipt</p>
+            <p style="margin: 2px 0; font-style: italic;">Digital Receipt via NIHA POS</p>
         </div>
     `;
     document.body.appendChild(billDiv);
 
-    // --- 3. HTML-ஐ படமாக (Image) மாற்றுதல் ---
+    // --- HTML-ஐ படமாக மாற்றுதல் ---
     html2canvas(billDiv).then(canvas => {
         canvas.toBlob(blob => {
-            const file = new File([blob], "Bill.png", { type: "image/png" });
+            const file = new File([blob], `Bill_${finalCustomerName}.png`, { type: "image/png" });
             
-            // மொபைலில் ஷேர் (Share) வசதியைப் பயன்படுத்துதல்
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 navigator.share({
                     files: [file],
@@ -286,7 +287,6 @@ window.generateBill = function() {
                     finishBill();
                 }).catch(() => {
                     document.body.removeChild(billDiv);
-                    alert("Sharing failed. You can print instead.");
                 });
             } else {
                 // ஷேர் வசதி இல்லையெனில் படம் டவுன்லோட் ஆகும்

@@ -112,17 +112,22 @@
 
                 <div style="margin-bottom: 15px;">
                     <input type="text" id="customerName" placeholder="Customer Name (விரும்பினால்)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;">
+                    
+                    <input type="tel" id="customerMobile" placeholder="WhatsApp Number (e.g. 9840012345)">
                 </div>
 
                 <div class="input-group">
-                    <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" oninput="fillPrice()">
-                    <datalist id="productSuggestions"></datalist>
-                    
-                    <input type="number" id="itemQty" placeholder="QTY">
-                    <input type="number" id="itemPrice" placeholder="RATE">
-                    <p id="stockDisplay" style="margin: 5px 0; font-size: 14px; color: #666; font-weight: bold;">Stock: -</p>
-                    <button onclick="addItem()">ADD</button>
-                </div>
+    <input type="text" id="itemName" list="productSuggestions" placeholder="PRODUCT NAME" oninput="fillPrice()">
+    <datalist id="productSuggestions"></datalist>
+    
+    <input type="number" id="itemQty" placeholder="QTY" step="0.001" oninput="updateLiveTotal()">
+    <input type="number" id="itemPrice" placeholder="RATE" oninput="updateLiveTotal()">
+    
+    <p id="liveTotalDisplay" style="margin: 5px 0; font-size: 14px; color: #2ecc71; font-weight: bold;">Amount: ₹ 0</p>
+    
+    <p id="stockDisplay" style="margin: 5px 0; font-size: 14px; color: #666; font-weight: bold;">Stock: -</p>
+    <button onclick="addItem()">ADD</button>
+</div>
 
                 <div class="sales-report-container" style="background: white; padding: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #ccc; text-align: center;">
                     <h3 style="margin: 0; font-size: 18px;">இன்றைய மொத்த விற்பனை: <span style="color: green;">₹ <span id="todayTotal">0</span></span></h3>
@@ -151,7 +156,7 @@
 
         <div id="inventory-tab" class="tab-content" style="display:none;">
             <div class="container cloud-section">
-                <h3>Add New Product to Cloud</h3>
+                <h3>Add New Products</h3>
                 <input type="text" id="pName" placeholder="Product Name">
                 <input type="number" id="pPrice" placeholder="Price">
                 <input type="number" id="pStock" placeholder="Stock Quantity (எண்ணிக்கை)">

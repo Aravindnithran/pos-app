@@ -99,7 +99,7 @@ onValue(ref(db, 'products'), (snapshot) => {
 window.updateStockAmount = function(key, currentStock) {
     let newAmount = prompt("புதிய ஸ்டாக் அளவைத் தட்டச்சு செய்யவும்:", currentStock);
     if (newAmount !== null && newAmount !== "") {
-        let updatedStock = parseInt(newAmount);
+        let updatedStock = parseFloat(newAmount); // Changed to parseFloat for decimals in stock
         if (!isNaN(updatedStock)) {
             set(ref(db, 'products/' + key + '/productStock'), updatedStock)
             .then(() => alert("Stock Updated!"));
@@ -134,9 +134,10 @@ window.updateBillTable = function() {
         items.forEach((item, index) => {
             let row = table.insertRow();
             row.insertCell(0).innerText = item.name;
-            row.insertCell(1).innerText = item.qty;
-            row.insertCell(2).innerText = "₹" + item.price;
-            row.insertCell(3).innerText = "₹" + item.total;
+            // Qty-ஐ 0.500 என்று காட்ட .toFixed(3) சேர்த்துள்ளேன்
+            row.insertCell(1).innerText = parseFloat(item.qty).toFixed(3);
+            row.insertCell(2).innerText = "₹" + parseFloat(item.price).toFixed(2);
+            row.insertCell(3).innerText = "₹" + parseFloat(item.total).toFixed(2);
             let actionCell = row.insertCell(4);
             actionCell.innerHTML = `
                 <div style="display: flex; gap: 20px; justify-content: flex-start; align-items: center; padding: 10px 0;">
@@ -146,18 +147,20 @@ window.updateBillTable = function() {
             totalAmount += item.total;
         });
     }
-    document.getElementById("totalAmount").innerText = totalAmount;
+    document.getElementById("totalAmount").innerText = totalAmount.toFixed(2);
 }
 
 window.addItem = function() {
     let name = document.getElementById("itemName").value;
-    let qty = parseInt(document.getElementById("itemQty").value);
+    let qty = parseFloat(document.getElementById("itemQty").value); 
     let price = parseFloat(document.getElementById("itemPrice").value);
 
-    if (name && qty && price) {
+    if (name && !isNaN(qty) && qty > 0 && !isNaN(price)) {
         let currentStock = 0;
         Object.keys(cloudProducts).forEach(key => {
-            if (cloudProducts[key].productName === name) currentStock = cloudProducts[key].productStock || 0;
+            if (cloudProducts[key].productName === name) {
+                currentStock = parseFloat(cloudProducts[key].productStock) || 0;
+            }
         });
 
         if (qty > currentStock) {
@@ -165,7 +168,9 @@ window.addItem = function() {
             return;
         }
 
-        let item = { name, qty, price, total: qty * price };
+        let total = parseFloat((qty * price).toFixed(2));
+        let item = { name, qty, price, total: total };
+
         if (editIndex === -1) {
             items.push(item);
         } else {
@@ -173,33 +178,47 @@ window.addItem = function() {
             editIndex = -1;
             document.querySelector('button[onclick="addItem()"]').innerText = 'ADD';
         }
+
         localStorage.setItem('myBillItems', JSON.stringify(items));
         
-        // இன்புட்களை மட்டும் சுத்தம் செய்யவும்
         document.getElementById("itemName").value = "";
         document.getElementById("itemQty").value = "";
         document.getElementById("itemPrice").value = "";
+        document.getElementById("liveTotalDisplay").innerText = "Amount: ₹ 0.00"; 
         
         window.updateBillTable(); 
+    } else {
+        alert("தயவுசெய்து பெயர், அளவு மற்றும் சரியான விலையை உள்ளிடவும்!");
     }
 }
+
+window.updateLiveTotal = function() {
+    let qty = parseFloat(document.getElementById('itemQty').value) || 0;
+    let rate = parseFloat(document.getElementById('itemPrice').value) || 0;
+    let liveTotal = qty * rate;
+    document.getElementById('liveTotalDisplay').innerText = "Amount: ₹ " + liveTotal.toFixed(2);
+};
 
 window.generateBill = function() {
     let finalTotal = parseFloat(document.getElementById("totalAmount").innerText);
     let cName = document.getElementById("customerName").value.trim();
+    let cMobile = document.getElementById("customerMobile").value.trim(); // மொபைல் எண் வாங்குதல்
     let finalCustomerName = cName !== "" ? cName : "Cash Customer";
     
     if (finalTotal === 0 || items.length === 0) return alert("பில் காலியாக உள்ளது!");
 
+    // --- FIREBASE சேமிப்பு ---
     try {
         push(ref(db, 'dailySales'), {
             customerName: finalCustomerName,
+            customerMobile: cMobile, // மொபைல் எண்ணையும் டேட்டாபேஸில் சேமிக்கிறோம்
             amount: finalTotal,
             date: new Date().toLocaleDateString(),
             time: new Date().toLocaleTimeString(),
             items: items 
         });
 
+        // ஸ்டாக் குறைக்கும் லாஜிக் (ஏற்கனவே உள்ளது)
         items.forEach(billItem => {
             Object.keys(cloudProducts).forEach(key => {
                 if (cloudProducts[key].productName === billItem.name) {
@@ -210,34 +229,80 @@ window.generateBill = function() {
         });
     } catch (e) { console.error(e); }
 
+    // --- பிரிண்ட் விண்டோ (3-Inch Thermal Design) ---
     let printWindow = window.open('', '_blank', 'width=400,height=600');
     printWindow.document.write(`
         <html><head><style>
-            body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 10px; }
-            .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-            th { border-bottom: 1px dashed #000; text-align: left; }
-            td { padding: 5px 0; }
-            .total { border-top: 2px dashed #000; margin-top: 10px; padding-top: 10px; text-align: right; font-weight: bold; }
+            @page { size: 80mm auto; margin: 0; }
+            body { font-family: 'Arial', sans-serif; width: 72mm; margin: 0 auto; padding: 5px; font-size: 13px; line-height: 1.2; }
+            .header { text-align: center; }
+            .store-name { font-size: 18px; font-weight: bold; margin: 0; }
+            .dashed-line { border-top: 1px dashed #000; margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th { text-align: left; border-bottom: 1px dashed #000; padding: 3px 0; }
+            td { padding: 4px 0; }
+            .total-row { font-weight: bold; font-size: 15px; margin-top: 10px; text-align: right; }
         </style></head><body>
         <div class="header">
-            <p style="font-size: 14px; margin: 0;">NIHA POS</p>
-            <p style="font-size: 18px; font-weight: bold; margin: 0;">AYYAPPAN STORE</p>
+            <p class="store-name">AYYAPPAN STORE</p>
             <p>No:135, P.H. ROAD, MADURAVOYAL</p>
-            <p>Mobile: 9943514861</p>
-            <hr>
-            <p style="text-align:left; margin: 5px 0;">Date: ${new Date().toLocaleString()}</p>
-            <p style="text-align:left; margin: 5px 0;"><b>Customer: ${finalCustomerName}</b></p>
+            <p>Cell: 9943514861</p>
+            <div class="dashed-line"></div>
+            <p style="text-align:left;">Date: ${new Date().toLocaleString()}</p>
+            <p style="text-align:left;"><b>Cust: ${finalCustomerName} ${cMobile ? '('+cMobile+')' : ''}</b></p>
+            <div class="dashed-line"></div>
         </div>
-        <table><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead><tbody>
-        ${items.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.total}</td></tr>`).join('')}
-        </tbody></table>
-        <div class="total">Grand Total: ₹${finalTotal}</div>
-        <div style="text-align:center; margin-top:20px;">Thank you! Visit Again!</div>
+        <table>
+            <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr></thead>
+            <tbody>
+            ${items.map(i => `<tr><td>${i.name}</td><td>${parseFloat(i.qty).toFixed(3)}</td><td>${i.price}</td><td style="text-align:right;">${i.total.toFixed(2)}</td></tr>`).join('')}
+            </tbody>
+        </table>
+        <div class="dashed-line"></div>
+        <div class="total-row">Grand Total: ₹${finalTotal.toFixed(2)}</div>
+        <div class="dashed-line"></div>
+        <p style="text-align:center; font-size:11px;">Thank you! Visit Again!</p>
         </body></html>
     `);
+    // ... மேலே உள்ள கோடுகள் அப்படியே இருக்கட்டும் ...
+
     printWindow.document.close();
-    setTimeout(() => { printWindow.print(); printWindow.close(); window.clearBill(); }, 500);
+
+    // வாட்ஸ்அப் மெசேஜ் டெக்ஸ்ட்
+    let billSummary = `*AYYAPPAN STORE - BILL*%0A`;
+    billSummary += `Date: ${new Date().toLocaleDateString()}%0A`;
+    billSummary += `Customer: ${finalCustomerName}%0A`;
+    billSummary += `--------------------------%0A`;
+    items.forEach(i => {
+        billSummary += `${i.name} - ${parseFloat(i.qty).toFixed(3)} x ${i.price} = ₹${i.total.toFixed(2)}%0A`;
+    });
+    billSummary += `--------------------------%0A`;
+    billSummary += `*Grand Total: ₹${finalTotal.toFixed(2)}*%0A`;
+    billSummary += `Thank you! Visit Again!`;
+
+    // முக்கியமான மாற்றம் இங்கே:
+    setTimeout(() => { 
+        printWindow.print(); 
+        
+        // பிரிண்ட் கொடுத்த பிறகு, 1 வினாடி கழித்து வாட்ஸ்அப் கேட்கும்
+        setTimeout(() => {
+            if(confirm("பில்லை WhatsApp-ல் அனுப்பலாமா?")) {
+                let waLink = cMobile !== "" 
+                    ? `https://wa.me/91${cMobile}?text=${billSummary}` 
+                    : `https://wa.me/?text=${billSummary}`;
+                
+                // புதிய டேப்பில் வாட்ஸ்அப் திறக்கும்
+                window.open(waLink, '_blank');
+            }
+            
+            // எல்லாம் முடிந்த பிறகு விண்டோவை மூடி, பில்லை கிளியர் செய்யவும்
+            printWindow.close(); 
+            document.getElementById("customerName").value = "";
+            document.getElementById("customerMobile").value = "";
+            window.clearBill();
+        }, 1000); 
+
+    }, 500);
 }
 
 // --- 6. INITIAL LOAD & UTILS ---
@@ -266,7 +331,7 @@ onValue(ref(db, 'dailySales'), (snapshot) => {
             });
         }
     }
-    if(document.getElementById("todayTotal")) document.getElementById("todayTotal").innerText = todaySum;
+    if(document.getElementById("todayTotal")) document.getElementById("todayTotal").innerText = todaySum.toFixed(2);
 });
 
 window.saveToCloud = function() {
@@ -274,7 +339,7 @@ window.saveToCloud = function() {
     const price = document.getElementById("pPrice").value;
     const stock = document.getElementById("pStock").value;
     if(name && price && stock) {
-        push(ref(db, 'products'), { productName: name, productPrice: price, productStock: parseInt(stock) })
+        push(ref(db, 'products'), { productName: name, productPrice: price, productStock: parseFloat(stock) })
         .then(() => { alert("Saved!"); document.getElementById("pName").value = ""; document.getElementById("pPrice").value = ""; document.getElementById("pStock").value = ""; });
     }
 }
@@ -298,11 +363,11 @@ window.editItem = function(index) {
     document.getElementById("itemPrice").value = item.price;
     editIndex = index;
     document.querySelector('button[onclick="addItem()"]').innerText = 'UPDATE';
+    window.updateLiveTotal(); // Update live total when editing
 }
 
 window.deleteProduct = function(key) { if(confirm("Delete product?")) remove(ref(db, 'products/' + key)); }
 
-// Sales Filter logic
 window.filterByDate = function() {
     const searchDate = document.getElementById("searchDate").value;
     if (!searchDate) return alert("தேதியைத் தேர்ந்தெடுக்கவும்!");
@@ -322,7 +387,7 @@ window.filterByDate = function() {
                     row.insertCell(2).innerHTML = `<button onclick="alert('பொருட்கள்: ' + '${salesData[key].items.map(i => i.name).join(", ")}')" style="padding:5px;">View</button>`;
                 }
             });
-            document.getElementById("filteredTotal").innerText = filteredSum;
+            document.getElementById("filteredTotal").innerText = filteredSum.toFixed(2);
         }
     }, { onlyOnce: true });
 };
@@ -330,5 +395,5 @@ window.filterByDate = function() {
 window.resetFilter = function() {
     document.getElementById("searchDate").value = "";
     document.getElementById("filteredTotal").innerText = "0";
-    location.reload(); // இங்கு ரீலோடு செய்யலாம் ஏனெனில் இது தனி பக்கம்
+    location.reload(); 
 };

@@ -1,7 +1,7 @@
-body { font-family: Arial, sans-serif; background: #71e57d; padding: 10px; }
+body { font-family: Arial, sans-serif; background: #a2e2a8; padding: 10px; }
 .container { background: rgb(170, 239, 168); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
 input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; }
-button { width: 100%; padding: 12px; background: #083417; color: white; border: none; border-radius: 5px; cursor: pointer; }
+button { width: 100%; padding: 12px; background: #538D22; color: white; border: none; border-radius: 5px; cursor: pointer; }
 table { width: 100%; margin-top: 20px; border-collapse: collapse; }
 th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
 .total-section { margin-top: 20px; text-align: right; }
@@ -11,7 +11,7 @@ th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
 .nav-menu {
     display: flex;
     justify-content: space-around;
-    background: #193c16;
+    background: #1A4301;
     padding: 10px;
     margin-bottom: 20px;
 }
@@ -26,7 +26,7 @@ th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
 
 .nav-menu button:hover {
     background: white;
-    color: #193c16;
+    color: #538D22;
 }
 
 /* Tab logic */
@@ -195,7 +195,7 @@ table {
         padding: 5px !important;
     }
     .nav-menu button {
-        font-size: 9px !important; /* பட்டன் பெயர்கள் தெரிய */
+        font-size: 8px !important; /* பட்டன் பெயர்கள் தெரிய */
         padding: 8px 2px !important;
     }
     th, td {
@@ -206,9 +206,9 @@ table {
 
 /* பட்டன் மற்றும் பேக்கிரவுண்ட் நிறத்தை மாற்ற */
 button, .header, .tab-btn.active {
-    background-color: #1b4229 !important;
-    border-color: #eaefec !important;
-    color: rgb(248, 244, 244); /* பச்சை நிறத்தில் வெள்ளை எழுத்துக்கள் நன்றாக இருக்கும் */
+    background-color: #143601 !important;
+    border-color: #AAD576 !important;
+    color: rgb(254, 254, 254); /* பச்சை நிறத்தில் வெள்ளை எழுத்துக்கள் நன்றாக இருக்கும் */
 }
 
 /* ஹோவர் (Mouse வைக்கும் போது) செய்யும் போது நிறம் மாற */

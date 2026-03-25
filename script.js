@@ -19,17 +19,30 @@ let cloudProducts = {};
 let editIndex = -1; 
 
 // --- 1. LOGIN LOGIC ---
-window.checkLogin = function() {
-    const pass = document.getElementById("adminPass").value;
-    const correctPass = "123"; 
+// Firebase Auth-ஐ இம்போர்ட் செய்திருப்பதை உறுதி செய்யவும்
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    if (pass === correctPass) {
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("main-app").style.display = "block";
-        sessionStorage.setItem("isLoggedIn", "true");
-    } else {
-        alert("தவறான பாஸ்வேர்ட்!");
+const auth = getAuth();
+
+window.checkLogin = function() {
+    const email = document.getElementById("adminEmail").value;
+    const pass = document.getElementById("adminPass").value;
+
+    if(!email || !pass) {
+        alert("தயவுசெய்து மெயில் மற்றும் பாஸ்வேர்டு உள்ளிடவும்!");
+        return;
     }
+
+    // Firebase மூலம் லாகின் செய்தல்
+    signInWithEmailAndPassword(auth, email, pass)
+    .then((userCredential) => {
+        // லாகின் வெற்றி! UID தானாக onAuthStateChanged மூலம் கையாளப்படும்
+        console.log("Login Success!");
+    })
+    .catch((error) => {
+        console.error("Login Error:", error.code);
+        alert("தவறான லாகின் விவரங்கள்! மீண்டும் முயற்சிக்கவும்.");
+    });
 }
 
 window.logout = function() {

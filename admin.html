@@ -1,0 +1,18 @@
+// அட்மின் பேஜ்ல எல்லா கஸ்டமரையும் காட்ட:
+function loadAllShops() {
+    onValue(ref(db, 'shops'), (snapshot) => {
+        const shops = snapshot.val();
+        let tableHTML = "<table><tr><th>Shop Name</th><th>Mobile</th><th>Status</th></tr>";
+        
+        for (let id in shops) {
+            const p = shops[id].profile;
+            tableHTML += `<tr>
+                <td>${p.shopName}</td>
+                <td>${p.mobile || 'No Number'}</td>
+                <td>${p.status}</td>
+            </tr>`;
+        }
+        tableHTML += "</table>";
+        document.getElementById("admin-list").innerHTML = tableHTML;
+    });
+}
